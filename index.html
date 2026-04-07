@@ -16,10 +16,8 @@
   <!-- ═══════════════ NAVBAR ═══════════════ -->
   <nav class="navbar navbar-expand-lg sticky-top">
     <div class="container">
-      <a class="navbar-brand" href="#" onclick="handleLogoClick(); return false;">
-        <!-- Reemplaza src="" con la ruta a tu logo PNG -->
-        <!-- <img src="img/logo.png" alt="Ferretería Lozada"> -->
-        <div class="brand-placeholder"><i class="bi bi-tools"></i></div>
+      <a class="navbar-brand" href="index.html">
+        <img src="Assets/icono.svg" alt="Ferretería Lozada">
         <span>FERRETERÍA LOZADA</span>
       </a>
       <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -27,332 +25,165 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto align-items-center gap-1">
-          <li class="nav-item public-link"><a class="nav-link px-3" href="#inicio">Inicio</a></li>
-          <li class="nav-item public-link"><a class="nav-link px-3" href="#nosotros">Nosotros</a></li>
-          <li class="nav-item public-link"><a class="nav-link px-3" href="#catalogo">Catálogo</a></li>
-          <li class="nav-item d-none" id="nav-admin-tab"></li>
-          <li class="nav-item d-none" id="nav-logout">
-            <a class="nav-link px-3" id="btn-logout"><i class="bi bi-box-arrow-right me-1"></i>Salir</a>
-          </li>
+          <li class="nav-item"><a class="nav-link px-3" href="#inicio">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link px-3" href="#nosotros">Nosotros</a></li>
+          <li class="nav-item"><a class="nav-link px-3" href="catalogo.html">Catálogo</a></li>
         </ul>
       </div>
     </div>
   </nav>
 
-  <!-- ═══════════════ VISTA PÚBLICA ═══════════════ -->
-  <div id="public-view" class="view-section active">
-
-    <!-- HERO -->
-    <header id="inicio" class="hero text-white">
-      <i class="bi bi-tools hero-icon-bg d-none d-xl-block"></i>
-      <div class="container position-relative">
-        <div class="row align-items-center">
-          <div class="col-lg-7">
-            <div class="hero-badge">Desde 2002 · Sur de Quito</div>
-            <h1 class="text-white fw-800 mb-3">
-              ¡Qué más, <span class="hero-accent">vecino!</span>
-            </h1>
-            <h2 class="text-white mb-3" style="font-size:1.3rem; font-weight:500; opacity:0.9;">
-              Todo para su obra y su hogar, al mejor precio.
-            </h2>
-            <p class="mb-4">
-              Herramientas eléctricas, material eléctrico, pinturas y más. Cotice su pedido en línea y recíbalo directo en nuestro WhatsApp.
-            </p>
-            <div class="d-flex flex-wrap gap-3">
-              <a href="#catalogo" class="btn btn-warning btn-lg fw-bold px-4">
-                <i class="bi bi-grid me-2"></i>Ver Catálogo
-              </a>
-              <a href="https://wa.me/593982965530" target="_blank" class="btn btn-success btn-lg fw-bold px-4">
-                <i class="bi bi-whatsapp me-2"></i>WhatsApp
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- STATS BAR -->
-    <div class="stats-bar text-white">
-      <div class="container">
-        <div class="row g-0">
-          <div class="col-6 col-md-3 stat-item">
-            <div class="stat-num">20+</div>
-            <div class="stat-label">Años de experiencia</div>
-          </div>
-          <div class="col-6 col-md-3 stat-item">
-            <div class="stat-num">500+</div>
-            <div class="stat-label">Productos disponibles</div>
-          </div>
-          <div class="col-6 col-md-3 stat-item">
-            <div class="stat-num">24h</div>
-            <div class="stat-label">Respuesta WhatsApp</div>
-          </div>
-          <div class="col-6 col-md-3 stat-item">
-            <div class="stat-num">5★</div>
-            <div class="stat-label">Atención personalizada</div>
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <header id="inicio" class="hero text-white">
+    <i class="bi bi-tools hero-icon-bg d-none d-xl-block"></i>
+    <div class="container position-relative">
+      <div class="row align-items-center">
+        <div class="col-lg-7">
+          <div class="hero-badge">Desde 2002 · Sur de Quito</div>
+          <h1 class="text-white fw-800 mb-3">
+            ¡Qué más, <span class="hero-accent">vecino!</span>
+          </h1>
+          <h2 class="text-white mb-3 hero-subtitle">
+            Todo para su obra y su hogar, al mejor precio.
+          </h2>
+          <p class="mb-4">
+            Herramientas eléctricas, material eléctrico, pinturas y más. Cotice su pedido en línea y recíbalo directo en nuestro WhatsApp.
+          </p>
+          <div class="d-flex flex-wrap gap-3">
+            <a href="catalogo.html" class="btn btn-warning btn-lg fw-bold px-4">
+              <i class="bi bi-grid me-2"></i>Ver Catálogo
+            </a>
+            <a href="https://wa.me/593982965530" target="_blank" class="btn btn-success btn-lg fw-bold px-4">
+              <i class="bi bi-whatsapp me-2"></i>WhatsApp
+            </a>
           </div>
         </div>
       </div>
     </div>
+  </header>
 
-    <!-- NOSOTROS -->
-    <section id="nosotros" class="py-5">
-      <div class="container py-3">
-        <div class="row justify-content-center">
-          <div class="col-lg-8">
-            <div class="nosotros-card">
-              <div class="text-center mb-4">
-                <div style="width:56px;height:56px;background:rgba(245,69,0,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-                  <i class="bi bi-people-fill" style="font-size:1.6rem;color:var(--orange);"></i>
-                </div>
-                <h2 class="text-uppercase fw-bold mb-0" style="font-size:1.4rem;">Nuestra Historia</h2>
-              </div>
-              <p class="lead text-center mb-3">
-                Ferretería Lozada nació en <strong>2002</strong> como una iniciativa para mantenernos unidos en familia. Desde entonces, hemos crecido junto al Sur de Quito, atendiendo a nuestros vecinos de Chillogallo, Ciudadela Ibarra, Conocoto y enviando encomiendas a provincias.
-              </p>
-              <p class="text-center text-muted mb-0">
-                Somos más que un negocio; somos expertos confiables listos para asesorarle en cada paso de su proyecto. Lo que no sepa cómo reparar, nosotros le enseñamos.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CÓMO COMPRAR -->
-    <section class="py-5" style="background:#f0f1f3;">
-      <div class="container">
-        <div class="text-center mb-5">
-          <h2 class="fw-bold text-uppercase" style="font-size:1.3rem; letter-spacing:1px;">¿Cómo hacer su pedido?</h2>
-          <p class="text-muted small">Rápido, fácil y sin complicaciones</p>
-        </div>
-        <div class="row g-4">
-          <div class="col-md-4">
-            <div class="step-card orange h-100">
-              <div class="step-icon"><i class="bi bi-bag-plus" style="color:var(--orange);"></i></div>
-              <h5 class="fw-bold">1. Arme su lista</h5>
-              <p class="text-muted small mb-0">Revise el catálogo y agregue al carrito todo lo que necesita para su obra.</p>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="step-card green h-100">
-              <div class="step-icon"><i class="bi bi-whatsapp" style="color:var(--success);"></i></div>
-              <h5 class="fw-bold">2. Envíe por WhatsApp</h5>
-              <p class="text-muted small mb-0">Haga clic en "Pedir por WhatsApp" y su lista llegará directamente al negocio.</p>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="step-card blue h-100">
-              <div class="step-icon"><i class="bi bi-truck" style="color:#0d6efd;"></i></div>
-              <h5 class="fw-bold">3. Coordine y reciba</h5>
-              <p class="text-muted small mb-0">Confirmamos el stock, acordamos el pago y le entregamos sus materiales.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CATÁLOGO -->
-    <section id="catalogo" class="py-5">
-      <div class="container">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-          <div>
-            <h2 class="fw-bold mb-1">Nuestro Catálogo</h2>
-            <p class="text-muted small mb-0">Encuentra lo que necesitas para su proyecto</p>
-          </div>
-          <div id="category-filters" class="d-flex flex-wrap gap-2"></div>
-        </div>
-        <div class="row g-4" id="catalog-grid">
-          <!-- Cargando... -->
-          <div class="col-12 text-center py-5" id="catalog-loading">
-            <div class="spinner-border" style="color:var(--orange);" role="status"></div>
-            <p class="mt-3 text-muted">Cargando productos...</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- ═══════════════ VISTA ADMIN ═══════════════ -->
-  <div id="admin-view" class="view-section py-5" style="display:none;">
+  <!-- ═══════════════ STATS BAR ═══════════════ -->
+  <div class="stats-bar text-white">
     <div class="container">
-      <div class="row mb-4 align-items-center">
-        <div class="col">
-          <h2 class="fw-bold mb-1">Panel de Control</h2>
-          <p class="text-muted small mb-0">Gestione productos, precios y disponibilidad</p>
+      <div class="row g-0">
+        <div class="col-6 col-md-3 stat-item">
+          <div class="stat-num">20+</div>
+          <div class="stat-label">Años de experiencia</div>
         </div>
-        <div class="col-auto">
-          <button class="btn fw-bold shadow-sm px-4" style="background:var(--orange);color:white;border:none;border-radius:10px;" data-bs-toggle="modal" data-bs-target="#addProductModal">
-            <i class="bi bi-plus-lg me-2"></i>Nuevo Producto
-          </button>
+        <div class="col-6 col-md-3 stat-item">
+          <div class="stat-num">500+</div>
+          <div class="stat-label">Productos disponibles</div>
         </div>
-      </div>
-      <div class="card border-0 shadow-sm" style="border-radius:14px;overflow:hidden;">
-        <div class="table-responsive">
-          <table class="table admin-table mb-0">
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Categoría</th>
-                <th>Precio</th>
-                <th>Disponibilidad</th>
-                <th class="text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="admin-table-body">
-              <tr><td colspan="5" class="text-center py-4 text-muted">Cargando...</td></tr>
-            </tbody>
-          </table>
+        <div class="col-6 col-md-3 stat-item">
+          <div class="stat-num">-2h</div>
+          <div class="stat-label">Respuesta WhatsApp</div>
+        </div>
+        <div class="col-6 col-md-3 stat-item">
+          <div class="stat-num">5★</div>
+          <div class="stat-label">Atención personalizada</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════ CARRITO OFFCANVAS ═══════════════ -->
-  <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" style="width:360px;">
-    <div class="offcanvas-header text-white">
-      <h5 class="offcanvas-title fw-bold"><i class="bi bi-cart3 me-2"></i>Mi Cotización</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body d-flex flex-column p-0">
-      <ul id="cart-items" class="list-unstyled flex-grow-1 overflow-auto p-3 mb-0"></ul>
-      <div class="cart-total-footer">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <span class="fw-bold" style="font-size:1rem;">Total Referencial:</span>
-          <span class="fw-bold" style="font-size:1.3rem;color:var(--orange);" id="cart-total">$0.00</span>
-        </div>
-        <button id="btn-whatsapp" class="btn-whatsapp-send">
-          <i class="bi bi-whatsapp me-2"></i>Pedir por WhatsApp
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Botón flotante carrito -->
-  <button id="floating-cart" class="floating-cart-btn" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas">
-    <i class="bi bi-cart-fill"></i>
-    <span id="floatingCartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.7rem;">0</span>
-  </button>
-
-  <!-- ═══════════════ MODAL AGREGAR PRODUCTO ═══════════════ -->
-  <div class="modal fade" id="addProductModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header text-white" style="background:var(--dark);">
-          <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Nuevo Producto</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form id="productForm">
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Nombre del Producto</label>
-              <input type="text" id="p-name" class="form-control" placeholder="Ej: Taladro percutor 700W" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Descripción</label>
-              <textarea id="p-desc" class="form-control" rows="2" placeholder="Ej: Ideal para perforar concreto, madera y metal..."></textarea>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Imagen del Producto</label>
-              <input type="file" id="p-image" class="form-control" accept="image/*">
-              <div class="progress-upload" id="p-progress-bar">
-                <div class="progress-upload-bar" id="p-progress-fill"></div>
+  <!-- ═══════════════ NOSOTROS ═══════════════ -->
+  <section id="nosotros" class="py-5">
+    <div class="container py-3">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="nosotros-card">
+            <div class="text-center mb-4">
+              <div class="hero-icon-wrap">
+                <i class="bi bi-people-fill icon-orange"></i>
               </div>
-              <small class="text-muted">Máx. 5MB · JPG, PNG o WebP</small>
+              <h2 class="text-uppercase fw-bold mb-0 section-title-lg">Nuestra Historia</h2>
             </div>
-            <div class="row g-3">
-              <div class="col-8">
-                <label class="form-label fw-semibold">Categoría</label>
-                <div class="input-group">
-                  <select id="p-category" class="form-select category-select"></select>
-                  <button class="btn btn-outline-secondary" type="button" onclick="addNewCategory('p-category')" title="Nueva categoría">
-                    <i class="bi bi-plus-lg"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="col-4">
-                <label class="form-label fw-semibold">Precio ($)</label>
-                <input type="number" id="p-price" class="form-control" step="0.01" min="0" placeholder="0.00" required>
-              </div>
-            </div>
-            <div class="mt-4">
-              <button type="submit" id="p-submit-btn" class="btn w-100 fw-bold py-2" style="background:var(--orange);color:white;border:none;border-radius:10px;">
-                <span id="p-submit-text"><i class="bi bi-cloud-upload me-2"></i>Guardar Producto</span>
-                <div class="upload-spinner d-inline-block" id="p-spinner"></div>
-              </button>
-            </div>
-          </form>
+            <p class="lead text-center mb-3">
+              Ferretería Lozada nació en <strong>2002</strong> como una iniciativa para mantenernos unidos en familia. Desde entonces, hemos crecido junto al Sur de Quito, atendiendo a nuestros vecinos de Chillogallo, Ciudadela Ibarra, Conocoto y enviando encomiendas a provincias.
+            </p>
+            <p class="text-center text-muted mb-0">
+              Somos más que un negocio; somos expertos confiables listos para asesorarle en cada paso de su proyecto. Lo que no sepa cómo reparar, nosotros le enseñamos.
+            </p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ═══════════════ MODAL EDITAR PRODUCTO ═══════════════ -->
-  <div class="modal fade" id="editProductModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header text-white" style="background:#0d6efd;">
-          <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Editar Producto</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  <!-- ═══════════════ UBICACIÓN ═══════════════ -->
+  <section id="ubicacion" class="py-5 section-alt-bg">
+    <div class="container">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-4">
+          <div class="location-card">
+            <div class="location-icon-wrap">
+              <i class="bi bi-geo-alt-fill icon-orange"></i>
+            </div>
+            <h4 class="fw-bold mb-2">¿Dónde estamos?</h4>
+            <p class="text-muted small mb-3">Encuéntrenos en el Sur de Quito. Atendemos a vecinos de Chillogallo, Ciudadela Ibarra, Conocoto y también enviamos encomiendas a provincias.</p>
+            <a href="https://maps.app.goo.gl/oe4wPnvE44CsF5Ks8" target="_blank" class="btn location-btn">
+              <i class="bi bi-map me-2"></i>Abrir en Google Maps
+            </a>
+          </div>
         </div>
-        <div class="modal-body">
-          <form id="editProductForm">
-            <input type="hidden" id="e-id">
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Nombre</label>
-              <input type="text" id="e-name" class="form-control" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Descripción</label>
-              <textarea id="e-desc" class="form-control" rows="2"></textarea>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold d-block">Imagen</label>
-              <div id="edit-img-preview" class="edit-img-preview mb-2"></div>
-              <input type="file" id="e-image" class="form-control mb-2" accept="image/*">
-              <div class="progress-upload" id="e-progress-bar">
-                <div class="progress-upload-bar" id="e-progress-fill"></div>
-              </div>
-              <button type="button" class="btn btn-sm btn-outline-danger mt-1" onclick="removeImageFromEdit()">
-                <i class="bi bi-trash me-1"></i>Quitar imagen
-              </button>
-            </div>
-            <div class="row g-3">
-              <div class="col-8">
-                <label class="form-label fw-semibold">Categoría</label>
-                <div class="input-group">
-                  <select id="e-category" class="form-select category-select"></select>
-                  <button class="btn btn-outline-secondary" type="button" onclick="addNewCategory('e-category')" title="Nueva categoría">
-                    <i class="bi bi-plus-lg"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="col-4">
-                <label class="form-label fw-semibold">Precio ($)</label>
-                <input type="number" id="e-price" class="form-control" step="0.01" min="0" required>
-              </div>
-            </div>
-            <div class="mt-4">
-              <button type="submit" id="e-submit-btn" class="btn w-100 fw-bold py-2" style="background:#0d6efd;color:white;border:none;border-radius:10px;">
-                <span id="e-submit-text"><i class="bi bi-check-circle me-2"></i>Guardar Cambios</span>
-                <div class="upload-spinner d-inline-block" id="e-spinner"></div>
-              </button>
-            </div>
-          </form>
+        <div class="col-lg-8">
+          <div class="map-card">
+            <iframe
+              class="map-frame"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1235.115081959671!2d-78.55236983754399!3d-0.27495812401078884!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d598c78f36d0a3%3A0xff116e2c8a687087!2sFerreter%C3%ADa%20Lozada!5e1!3m2!1ses-419!2sec!4v1775524830499!5m2!1ses-419!2sec"
+              allowfullscreen="" loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- ═══════════════ CÓMO COMPRAR ═══════════════ -->
+  <section class="py-5 section-white">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 class="fw-bold text-uppercase section-title-lg">¿Cómo hacer su pedido?</h2>
+        <p class="text-muted small">Rápido, fácil y sin complicaciones</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="step-card orange h-100">
+            <div class="step-icon"><i class="bi bi-bag-plus icon-orange"></i></div>
+            <h5 class="fw-bold">1. Arme su lista</h5>
+            <p class="text-muted small mb-3">Revise el catálogo y agregue al carrito todo lo que necesita para su obra.</p>
+            <a href="catalogo.html" class="btn btn-sm btn-outline-orange">Ver Catálogo</a>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="step-card green h-100">
+            <div class="step-icon"><i class="bi bi-whatsapp icon-success"></i></div>
+            <h5 class="fw-bold">2. Envíe por WhatsApp</h5>
+            <p class="text-muted small mb-0">Haga clic en "Pedir por WhatsApp" y su lista llegará directamente al negocio.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="step-card blue h-100">
+            <div class="step-icon"><i class="bi bi-truck icon-blue"></i></div>
+            <h5 class="fw-bold">3. Coordine y reciba</h5>
+            <p class="text-muted small mb-0">Confirmamos el stock, acordamos el pago y le entregamos sus materiales.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- ═══════════════ FOOTER ═══════════════ -->
   <footer class="py-4 text-white">
     <div class="container">
       <div class="row align-items-center">
         <div class="col-md-6 mb-2 mb-md-0">
-          <p class="mb-0 small" style="color:rgba(255,255,255,0.4);">&copy; 2026 Ferretería Lozada · Herramientas y Soluciones</p>
+          <p class="mb-0 small footer-note">&copy; 2026 Ferretería Lozada · Herramientas y Soluciones</p>
         </div>
         <div class="col-md-6 text-md-end">
-          <a href="#" class="text-decoration-none small" style="color:rgba(255,255,255,0.3);" data-bs-toggle="modal" data-bs-target="#loginModal">
+          <!-- Enlace directo a la página de administración -->
+          <a href="admin.html" class="text-decoration-none small footer-link">
             <i class="bi bi-lock-fill me-1"></i>Acceso Admin
           </a>
         </div>
@@ -360,34 +191,6 @@
     </div>
   </footer>
 
-  <!-- ═══════════════ MODAL LOGIN ═══════════════ -->
-  <div class="modal fade" id="loginModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content">
-        <div class="modal-header text-white" style="background:var(--dark);">
-          <h6 class="modal-title fw-bold"><i class="bi bi-shield-lock me-2"></i>Administración</h6>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-4">
-          <form id="loginForm">
-            <div class="mb-3">
-              <label class="form-label small fw-semibold">Correo</label>
-              <input type="email" id="admin-email" class="form-control" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small fw-semibold">Contraseña</label>
-              <input type="password" id="admin-password" class="form-control" required>
-            </div>
-            <button type="submit" class="btn w-100 fw-bold" style="background:var(--orange);color:white;border:none;border-radius:8px;">
-              Iniciar Sesión
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module" src="js/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catálogo - Ferretería Lozada</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.4/font/bootstrap-icons.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container">
+      <a href="index.html" class="navbar-brand">
+        <img src="Assets/icono.svg" alt="Ferretería Lozada">
+        <span>FERRETERÍA LOZADA</span>
+      </a>
+      <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-center gap-1">
+          <li class="nav-item"><a class="nav-link px-3" href="index.html#inicio">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link px-3" href="index.html#nosotros">Nosotros</a></li>
+          <li class="nav-item"><a class="nav-link px-3 active" href="#catalogo">Catálogo</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════ CATÁLOGO ═══════════════ -->
+  <section id="catalogo" class="py-5">
+    <div class="container">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+          <h2 class="fw-bold mb-1">Nuestro Catálogo</h2>
+          <p class="text-muted small mb-0">Encuentra lo que necesitas para su proyecto</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filtersModal">
+            <i class="bi bi-funnel me-2"></i>Filtros Avanzados
+          </button>
+          <button class="btn btn-outline-danger" id="public-clear-filters" onclick="clearFilters()" title="Limpiar filtros">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          <div class="input-group" style="max-width: 300px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="public-search" class="form-control" placeholder="Buscar productos...">
+          </div>
+        </div>
+      </div>
+
+      <div id="category-filters" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+      <div class="row g-4" id="catalog-grid">
+        <!-- Cargando... -->
+        <div class="col-12 text-center py-5" id="catalog-loading">
+          <div class="spinner-border spinner-border-orange" role="status"></div>
+          <p class="mt-3 text-muted">Cargando productos...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ MODAL FILTROS AVANZADOS ═══════════════ -->
+  <div class="modal fade" id="filtersModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-funnel me-2"></i>Filtros Avanzados</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Categoría</label>
+            <select id="filter-category" class="form-select">
+              <option value="">Todas las categorías</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Disponibilidad</label>
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" name="public-stock-filter" id="public-stock-all" value="all" checked>
+              <label class="btn btn-outline-secondary" for="public-stock-all">Todos</label>
+              <input type="radio" class="btn-check" name="public-stock-filter" id="public-stock-in" value="in">
+              <label class="btn btn-outline-success" for="public-stock-in">En Stock</label>
+              <input type="radio" class="btn-check" name="public-stock-filter" id="public-stock-out" value="out">
+              <label class="btn btn-outline-danger" for="public-stock-out">Agotado</label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Rango de Precio</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="number" id="price-min" class="form-control" placeholder="Mínimo" min="0" step="0.01">
+              </div>
+              <div class="col-6">
+                <input type="number" id="price-max" class="form-control" placeholder="Máximo" min="0" step="0.01">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="clearFilters()">Limpiar</button>
+          <button type="button" class="btn btn-primary" onclick="applyFilters()">Aplicar Filtros</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CARRITO OFFCANVAS ═══════════════ -->
+  <div class="offcanvas offcanvas-end cart-offcanvas" tabindex="-1" id="cartOffcanvas">
+    <div class="offcanvas-header text-white">
+      <h5 class="offcanvas-title fw-bold"><i class="bi bi-cart3 me-2"></i>Mi Cotización</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column p-0">
+      <div id="cart-items" class="flex-grow-1 p-3">
+        <p class="text-center text-muted py-4">Su carrito está vacío</p>
+      </div>
+      <div class="p-3 border-top">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="fw-bold">Total estimado:</span>
+          <span id="cart-total" class="fw-bold fs-5">$0.00</span>
+        </div>
+        <button id="btn-send-quote" class="btn btn-success w-100 fw-bold" disabled>
+          <i class="bi bi-whatsapp me-2"></i>Enviar Cotización
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón flotante carrito -->
+  <button id="floating-cart" class="floating-cart-btn" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas">
+    <i class="bi bi-cart-fill"></i>
+    <span id="floatingCartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger floating-cart-badge">0</span>
+  </button>
+
+  <!-- ═══════════════ SCRIPTS ═══════════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
