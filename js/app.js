@@ -1,19 +1,13 @@
 // ════════════════════════════════════════════
-//  FERRETERÍA LOZADA — app.js
-//  Firebase Firestore + Base64 (compresión automática)
+//  FERRETERÍA LOZADA — app.js  v2
+//  Catálogo con precios pill y cápsulas de medida
 // ════════════════════════════════════════════
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc,
-  doc, updateDoc, onSnapshot
+  getFirestore, collection, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  getAuth, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// ─── CONFIG ───────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyAiObbru3uZgnPFD3P72mw98jm7uKeKgBs",
   authDomain: "ferreterialozada-91566.firebaseapp.com",
@@ -25,410 +19,300 @@ const firebaseConfig = {
 
 const app          = initializeApp(firebaseConfig);
 const db           = getFirestore(app);
-const auth         = getAuth(app);
 const productosRef = collection(db, "productos");
 
-// ─── STATE ────────────────────────────────
-let catalogData       = [];
-let cart              = [];
-let currentFilter     = 'Todos';
-let dynamicCategories = ['Herramientas', 'Materiales', 'Seguridad'];
-const waNumber        = "593982965530";
+// ─── ESTADO ───────────────────────────────
+let catalogData          = [];
+let cart                 = [];
+let dynamicCategories    = [];
+let publicSearchQuery    = '';
+let publicCategoryFilter = '';
+let publicStockFilter    = 'all';
+let publicPriceMin       = '';
+let publicPriceMax       = '';
+let selectedVariantsMemory = {}; // Guarda la variante que eligió el cliente
+const waNumber           = "593982965530";
 
-// Edición de imagen
-let editCurrentImageB64 = "";
-let editNewImageB64     = "";
-let editImageRemoved    = false;
+// ─── IMAGEN ───────────────────────────────
+function getImage(p) { return p.imageB64 || p.image || ''; }
 
-// ─── COMPRIMIR IMAGEN ─────────────────────
-// Redimensiona a máx 800px ancho y comprime a JPEG 75%
-// Resultado siempre < 200KB aprox — seguro para Firestore
-function compressImage(file, maxWidth = 800, quality = 0.75) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = ev => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let w = img.width, h = img.height;
-        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// ─── NAVEGACIÓN ───────────────────────────
-window.switchView = function(view) {
-  document.querySelectorAll('.view-section').forEach(el => {
-    el.style.display = 'none';
-    el.classList.remove('active');
-  });
-  const target = document.getElementById(`${view}-view`);
-  if (target) {
-    target.style.display = 'block';
-    setTimeout(() => target.classList.add('active'), 10);
-  }
-  const floatCart = document.getElementById('floating-cart');
-  if (floatCart) floatCart.style.display = (view === 'public') ? 'flex' : 'none';
-
-  document.querySelectorAll('.public-link').forEach(el => {
-    el.style.display = (view === 'public') ? 'block' : 'none';
-  });
-
-  if (view === 'public') renderCatalog();
-  if (view === 'admin')  renderAdminTable();
-};
-
-window.handleLogoClick = function() {
-  if (auth.currentUser) {
-    signOut(auth).then(() => window.switchView('public'));
-  } else {
-    window.switchView('public');
-  }
-};
-
-// ─── CATEGORÍAS ───────────────────────────
-window.addNewCategory = function(selectId) {
-  const name = prompt("Nombre de la nueva categoría:");
-  if (name && name.trim() && !dynamicCategories.includes(name.trim())) {
-    dynamicCategories.push(name.trim());
-    refreshCategorySelects();
-    const el = document.getElementById(selectId);
-    if (el) el.value = name.trim();
-  }
-};
-
-function refreshCategorySelects() {
-  document.querySelectorAll('.category-select').forEach(s => {
-    s.innerHTML = dynamicCategories
-      .map(c => `<option value="${c}">${c}</option>`)
-      .join('');
-  });
-  const filterBox = document.getElementById('category-filters');
-  if (filterBox) {
-    filterBox.innerHTML = ['Todos', ...dynamicCategories].map(c => `
-      <button class="filter-btn ${currentFilter === c ? 'active' : ''}"
-        onclick="filterProducts('${c}')">${c}</button>
-    `).join('');
-  }
-}
-
-// ─── AUTH ─────────────────────────────────
-onAuthStateChanged(auth, user => {
-  const adminTab = document.getElementById('nav-admin-tab');
-  const logoutEl = document.getElementById('nav-logout');
-  if (user) {
-    adminTab?.classList.remove('d-none');
-    logoutEl?.classList.remove('d-none');
-    window.switchView('admin');
-  } else {
-    adminTab?.classList.add('d-none');
-    logoutEl?.classList.add('d-none');
-    window.switchView('public');
-  }
-});
-
-document.getElementById('loginForm')?.addEventListener('submit', e => {
-  e.preventDefault();
-  signInWithEmailAndPassword(
-    auth,
-    document.getElementById('admin-email').value,
-    document.getElementById('admin-password').value
-  ).then(() => {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'))
-               || new bootstrap.Modal(document.getElementById('loginModal'));
-    modal.hide();
-    document.getElementById('loginForm').reset();
-  }).catch(() => alert("Correo o contraseña incorrectos."));
-});
-
-document.getElementById('btn-logout')?.addEventListener('click', () => signOut(auth));
-
-// ─── FIRESTORE LISTENER ───────────────────
+// ─── FIRESTORE: PRODUCTOS ─────────────────
 onSnapshot(productosRef, snapshot => {
-  catalogData = [];
+  catalogData       = [];
+  dynamicCategories = [];
   snapshot.forEach(d => {
     const data = d.data();
     catalogData.push({ id: d.id, ...data });
-    if (data.category && !dynamicCategories.includes(data.category)) {
+    if (data.category && !dynamicCategories.includes(data.category))
       dynamicCategories.push(data.category);
-    }
   });
+  refreshCategoryFilters();
   refreshCategorySelects();
-
-  const loading = document.getElementById('catalog-loading');
-  if (loading) loading.style.display = 'none';
-
   renderCatalog();
-  const adminView = document.getElementById('admin-view');
-  if (adminView?.style.display === 'block') renderAdminTable();
-
+  document.getElementById('catalog-loading')?.classList.add('d-none');
 }, err => {
-  console.error("Error Firestore:", err);
+  console.error('Error Firestore:', err);
   const loading = document.getElementById('catalog-loading');
-  if (loading) loading.innerHTML =
-    '<p class="text-danger mt-3">Error al conectar. Revisa las reglas de Firestore.</p>';
+  if (loading) loading.innerHTML = '<p class="text-danger mt-3">Error al conectar con Firestore.</p>';
 });
 
-// ─── GUARDAR NUEVO PRODUCTO ───────────────
-document.getElementById('productForm')?.addEventListener('submit', async function(e) {
-  e.preventDefault();
+// ─── FILTROS DE CATEGORÍA ─────────────────
+function refreshCategoryFilters() {
+  const filterBox = document.getElementById('category-filters');
+  if (!filterBox) return;
+  filterBox.innerHTML = ['Todos', ...dynamicCategories].map(c => {
+    const isActive = publicCategoryFilter === (c === 'Todos' ? '' : c);
+    return `<button type="button" class="filter-btn${isActive ? ' active' : ''}" data-filter="${c}">${c}</button>`;
+  }).join('');
+}
 
-  const btn = document.getElementById('p-submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
-
-  const file = document.getElementById('p-image').files[0];
-  let imageB64 = "";
-
-  try {
-    if (file) imageB64 = await compressImage(file);
-
-    await addDoc(productosRef, {
-      name:     document.getElementById('p-name').value.trim(),
-      desc:     document.getElementById('p-desc').value.trim(),
-      category: document.getElementById('p-category').value,
-      price:    parseFloat(document.getElementById('p-price').value),
-      stock:    true,
-      imageB64: imageB64,
-    });
-
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'))
-               || new bootstrap.Modal(document.getElementById('addProductModal'));
-    modal.hide();
-    this.reset();
-
-  } catch (err) {
-    console.error("Error al guardar:", err);
-    alert("Error al guardar. Si tiene imagen, intente con una foto más pequeña.");
+function refreshCategorySelects() {
+  const filterCat = document.getElementById('filter-category');
+  if (filterCat) {
+    filterCat.innerHTML = '<option value="">Todas las categorías</option>' +
+      dynamicCategories.map(c => `<option value="${c}">${c}</option>`).join('');
   }
+}
 
-  btn.disabled = false;
-  btn.innerHTML = '<i class="bi bi-cloud-upload me-2"></i>Guardar Producto';
-});
+// ─── RENDER PRECIO PILL ───────────────────
+// Ambos precios con la misma tipografía y tamaño,
+// diferenciados solo por la leyenda "Unidad" / "Ciento"
+// ─── RENDER ÁREA DE PRECIOS Y BOTONES ─────────────
+function renderPriceArea(p) {
+  const unit = p.price != null ? parseFloat(p.price) : null;
+  const bulk = p.bulkPrice != null && p.bulkPrice > 0 ? parseFloat(p.bulkPrice) : null;
 
-// ─── ABRIR MODAL EDITAR ───────────────────
-window.openEditModal = function(id) {
-  const p = catalogData.find(x => x.id === id);
+  if (unit === null) return '';
+
+  const measureArg = p.measure ? p.measure.replace(/'/g, "\\'") : '';
+  const btnDisabled = !p.stock ? 'disabled' : '';
+  
+  if (!bulk) {
+    // PRECIO ÚNICO: Sin texto "Unidad", tipografía bold y naranja
+    const btnText = !p.stock ? 'Sin stock' : '<i class="bi bi-cart-plus me-1"></i>Agregar';
+    return `
+      <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+        <span class="single-price-display">$${unit.toFixed(2)}</span>
+        <button class="btn btn-dark fw-bold btn-sm px-3" onclick="addToCart('${p.id}', '${measureArg}', 'unit')" ${btnDisabled}>
+          ${btnText}
+        </button>
+      </div>`;
+  } else {
+    // TIENE PRECIO POR UNIDAD Y POR CIENTO
+    const btnTextUnit = !p.stock ? 'Sin stock' : '<i class="bi bi-cart-plus"></i> Unidad';
+    const btnTextBulk = !p.stock ? 'Sin stock' : '<i class="bi bi-cart-plus"></i> Ciento';
+    
+    return `
+      <div class="d-flex flex-column gap-2 mt-2 pt-2 border-top">
+        <div class="d-flex justify-content-between align-items-center p-2 rounded bg-white" style="border: 1px solid #e0e0e0;">
+          <div>
+            <span class="d-block text-muted fw-bold" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Unidad</span>
+            <span class="fw-bold" style="color: var(--orange); font-size: 1.15rem; font-family: 'Poppins', sans-serif;">$${unit.toFixed(2)}</span>
+          </div>
+          <button class="btn btn-sm btn-dark fw-bold" onclick="addToCart('${p.id}', '${measureArg}', 'unit')" ${btnDisabled}>
+            ${btnTextUnit}
+          </button>
+        </div>
+        <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: #fff4f0; border: 1px solid #ffd8c9;">
+          <div>
+            <span class="d-block text-muted fw-bold" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Ciento</span>
+            <span class="fw-bold" style="color: var(--orange); font-size: 1.15rem; font-family: 'Poppins', sans-serif;">$${bulk.toFixed(2)}</span>
+          </div>
+          <button class="btn btn-sm btn-outline-danger fw-bold" onclick="addToCart('${p.id}', '${measureArg}', 'bulk')" ${btnDisabled}>
+            ${btnTextBulk}
+          </button>
+        </div>
+      </div>`;
+  }
+}
+
+// Función global para actualizar el precio cuando se elige una medida diferente
+window.changeVariant = function(productId, groupId) {
+  // Guardamos en memoria qué medida seleccionó el usuario para este grupo
+  selectedVariantsMemory[groupId] = productId;
+  
+  const p = catalogData.find(x => x.id === productId);
   if (!p) return;
-
-  document.getElementById('e-id').value    = p.id;
-  document.getElementById('e-name').value  = p.name  || '';
-  document.getElementById('e-desc').value  = p.desc  || '';
-  document.getElementById('e-price').value = p.price || '';
-  document.getElementById('e-image').value = '';
-
-  refreshCategorySelects();
-  const catSel = document.getElementById('e-category');
-  // Soporta campo nuevo "imageB64" y campo legado "image"
-  if (catSel) catSel.value = p.category || dynamicCategories[0];
-
-  editCurrentImageB64 = p.imageB64 || p.image || '';
-  editNewImageB64     = '';
-  editImageRemoved    = false;
-
-  const preview = document.getElementById('edit-img-preview');
-  if (preview) {
-    preview.innerHTML = editCurrentImageB64
-      ? `<img src="${editCurrentImageB64}" alt="Imagen actual">`
-      : '<span class="text-muted small">Sin imagen</span>';
+  const area = document.getElementById(`variant-price-area-${groupId}`);
+  if (area) {
+    area.innerHTML = renderPriceArea(p);
   }
-
-  new bootstrap.Modal(document.getElementById('editProductModal')).show();
 };
 
-// Preview nueva imagen al editar
-document.getElementById('e-image')?.addEventListener('change', async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  editNewImageB64  = await compressImage(file);
-  editImageRemoved = false;
-  const preview = document.getElementById('edit-img-preview');
-  if (preview) preview.innerHTML = `<img src="${editNewImageB64}" alt="Nueva imagen">`;
-});
-
-window.removeImageFromEdit = function() {
-  editNewImageB64  = '';
-  editImageRemoved = true;
-  document.getElementById('e-image').value = '';
-  const preview = document.getElementById('edit-img-preview');
-  if (preview) preview.innerHTML =
-    '<span class="badge" style="background:#fee2e2;color:#991b1b;">Imagen eliminada</span>';
-};
-
-// ─── GUARDAR CAMBIOS (EDITAR) ─────────────
-document.getElementById('editProductForm')?.addEventListener('submit', async function(e) {
-  e.preventDefault();
-
-  const btn = document.getElementById('e-submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
-
-  const id = document.getElementById('e-id').value;
-
-  let finalImageB64;
-  if (editImageRemoved)     finalImageB64 = "";
-  else if (editNewImageB64) finalImageB64 = editNewImageB64;
-  else                      finalImageB64 = editCurrentImageB64;
-
-  try {
-    await updateDoc(doc(db, "productos", id), {
-      name:     document.getElementById('e-name').value.trim(),
-      desc:     document.getElementById('e-desc').value.trim(),
-      category: document.getElementById('e-category').value,
-      price:    parseFloat(document.getElementById('e-price').value),
-      imageB64: finalImageB64,
-    });
-
-    bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
-
-  } catch (err) {
-    console.error("Error al editar:", err);
-    alert("Error al guardar cambios. Intenta de nuevo.");
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Guardar Cambios';
-});
-
-// ─── TOGGLE STOCK ─────────────────────────
-window.toggleStock = async function(id) {
-  const p = catalogData.find(x => x.id === id);
-  if (p) await updateDoc(doc(db, "productos", id), { stock: !p.stock });
-};
-
-// ─── ELIMINAR PRODUCTO ────────────────────
-window.deleteProduct = async function(id) {
-  if (!confirm('¿Eliminar este producto de forma permanente?')) return;
-  await deleteDoc(doc(db, "productos", id));
-};
+// ─── RENDER CÁPSULA DE MEDIDA ─────────────
+function renderMeasureCapsules(p) {
+  const measures = Array.isArray(p.measures) && p.measures.length > 0
+    ? p.measures
+    : (p.measure ? [p.measure] : []);
+  if (!measures.length) return '';
+  return `<div class="measure-capsules-row">${measures.map(m => `<span class="measure-capsule">${m}</span>`).join('')}</div>`;
+}
 
 // ─── RENDER CATÁLOGO ──────────────────────
-window.filterProducts = function(cat) {
-  currentFilter = cat;
-  refreshCategorySelects();
-  renderCatalog();
-};
-
-// Compatibilidad campo viejo "image" y nuevo "imageB64"
-function getImage(p) { return p.imageB64 || p.image || ''; }
-
 function renderCatalog() {
   const grid = document.getElementById('catalog-grid');
   if (!grid) return;
 
-  const filtered = currentFilter === 'Todos'
-    ? catalogData
-    : catalogData.filter(p => p.category === currentFilter);
+  let filtered = catalogData;
+  if (publicCategoryFilter) filtered = filtered.filter(p => p.category === publicCategoryFilter);
+  if (publicStockFilter === 'in')  filtered = filtered.filter(p => p.stock);
+  if (publicStockFilter === 'out') filtered = filtered.filter(p => !p.stock);
+  if (publicPriceMin !== '') filtered = filtered.filter(p => parseFloat(p.price) >= parseFloat(publicPriceMin));
+  if (publicPriceMax !== '') filtered = filtered.filter(p => parseFloat(p.price) <= parseFloat(publicPriceMax));
+  if (publicSearchQuery) filtered = filtered.filter(p =>
+    p.name.toLowerCase().includes(publicSearchQuery.toLowerCase()) ||
+    (p.desc && p.desc.toLowerCase().includes(publicSearchQuery.toLowerCase()))
+  );
 
   if (filtered.length === 0) {
     grid.innerHTML = `
       <div class="col-12 text-center py-5">
         <i class="bi bi-box fs-1 text-muted d-block mb-3"></i>
-        <p class="text-muted">No hay productos en esta categoría.</p>
+        <p class="text-muted">No se encontraron productos con los filtros aplicados.</p>
+        <button class="btn btn-sm btn-outline-secondary mt-2" onclick="clearFilters()">Limpiar filtros</button>
       </div>`;
     return;
   }
 
-  grid.innerHTML = filtered.map(p => {
-    const img = getImage(p);
-    const imgHTML = img
-      ? `<img src="${img}" alt="${p.name}" loading="lazy">`
-      : `<i class="bi bi-tools placeholder-icon"></i>`;
+  // Agrupar por nombre (variantes)
+  const groups = {};
+  const order  = [];
+  filtered.forEach(p => {
+    if (!groups[p.name]) { groups[p.name] = []; order.push(p.name); }
+    groups[p.name].push(p);
+  });
 
-    const btnHTML = p.stock
-      ? `<button class="btn-add-cart" onclick="addToCart('${p.id}', this)">
-           <i class="bi bi-cart-plus me-2"></i>Agregar al carrito
-         </button>`
-      : `<button class="btn-add-cart" disabled>Sin stock</button>`;
+  grid.innerHTML = order.map(name => {
+    const group = groups[name];
+    return group.length === 1 ? renderSingleCard(group[0]) : renderGroupCard(group);
+  }).join('');
+}
 
-    return `
-      <div class="col-sm-6 col-lg-4">
-        <div class="card product-card h-100">
-          <div class="product-img-container">${imgHTML}</div>
-          <div class="card-body d-flex flex-column p-3">
-            <span class="product-badge mb-2">${p.category}</span>
-            <h6 class="fw-bold mb-1">${p.name}</h6>
-            ${p.desc ? `<p class="text-muted small mb-2" style="flex-grow:1;">${p.desc}</p>` : '<div style="flex-grow:1;"></div>'}
-            <div class="mt-2">
-              <p class="product-price mb-2">$${parseFloat(p.price).toFixed(2)}</p>
-              ${btnHTML}
+// ─── TARJETA PRODUCTO ÚNICO ───────────────
+function renderSingleCard(p) {
+  const img = getImage(p);
+  const imgHTML = img
+    ? `<img src="${img}" alt="${p.name}" loading="lazy">`
+    : `<i class="bi bi-tools placeholder-icon"></i>`;
+
+  // Preparamos la cápsula de la medida (si el producto tiene alguna)
+  let measureCapsuleHTML = '';
+  if (p.measure) {
+    measureCapsuleHTML = `<span class="measure-capsule" style="padding: 2px 10px; font-size: 0.7rem;">${p.measure}</span>`;
+  } else if (Array.isArray(p.measures) && p.measures.length > 0) {
+    measureCapsuleHTML = `<span class="measure-capsule" style="padding: 2px 10px; font-size: 0.7rem;">${p.measures[0]}</span>`;
+  }
+
+  return `
+    <div class="col-sm-6 col-lg-4">
+      <div class="card product-card h-100">
+        <div class="product-img-container">${imgHTML}</div>
+        <div class="card-body d-flex flex-column p-3">
+          <span class="product-badge mb-2 align-self-start">${p.category || '—'}</span>
+          
+          <div class="d-flex align-items-center flex-wrap gap-2 mb-2 mt-1">
+            <h6 class="fw-bold mb-0">${p.name}</h6>
+            ${measureCapsuleHTML}
+          </div>
+
+          ${p.desc ? `<p class="text-muted small mb-2 flex-grow-1">${p.desc}</p>` : '<div class="flex-grow-1"></div>'}
+          <div class="mt-auto">
+            ${renderPriceArea(p)}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── TARJETA GRUPO DE VARIANTES (DESPLEGABLE) ───────────
+// ─── TARJETA GRUPO DE VARIANTES (DESPLEGABLE) ───────────
+function renderGroupCard(group) {
+  const base = group[0];
+  const safeGroupId = 'group-' + base.id; // ID único para el grupo
+  
+  // 1. Verificamos si hay una variante guardada en memoria tras actualizarse la BD
+  const savedVariantId = selectedVariantsMemory[safeGroupId];
+  let activeVariant = base; // Por defecto es la primera medida
+  
+  if (savedVariantId) {
+    const found = group.find(x => x.id === savedVariantId);
+    if (found) activeVariant = found;
+  }
+
+  const img  = getImage(activeVariant);
+  const imgHTML = img
+    ? `<img src="${img}" alt="${activeVariant.name}" loading="lazy">`
+    : `<i class="bi bi-tools placeholder-icon"></i>`;
+
+  // 2. Dibujamos las opciones, marcando como "selected" la activa
+  const options = group.map(p => {
+    const measure = (Array.isArray(p.measures) && p.measures.length > 0) ? p.measures.join(', ') : (p.measure || 'Sin medida');
+    const isSelected = (p.id === activeVariant.id) ? 'selected' : '';
+    return `<option value="${p.id}" ${isSelected}>${measure}</option>`;
+  }).join('');
+
+  return `
+    <div class="col-sm-6 col-lg-4">
+      <div class="card product-card h-100">
+        <div class="product-img-container">${imgHTML}</div>
+        <div class="card-body d-flex flex-column p-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="product-badge">${activeVariant.category || '—'}</span>
+            <span class="badge bg-secondary rounded-pill px-2 py-1" style="font-size:0.7rem; font-weight:600;">
+              ${group.length} medidas
+            </span>
+          </div>
+          <h6 class="fw-bold mb-1">${activeVariant.name}</h6>
+          ${activeVariant.desc ? `<p class="text-muted small mb-3">${activeVariant.desc}</p>` : '<div class="mb-2"></div>'}
+          
+          <div class="mt-auto bg-light p-2 rounded" style="border: 1px solid #e9ecef;">
+            <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-rulers me-1"></i>Elegir medida:</label>
+            <select class="form-select form-select-sm shadow-sm mb-2" style="font-weight: 500; border-color: #ced4da;" onchange="changeVariant(this.value, '${safeGroupId}')">
+              ${options}
+            </select>
+            <div id="variant-price-area-${safeGroupId}">
+              ${renderPriceArea(activeVariant)}
             </div>
           </div>
         </div>
-      </div>`;
-  }).join('');
-}
-
-// ─── RENDER ADMIN TABLE ───────────────────
-function renderAdminTable() {
-  const tbody = document.getElementById('admin-table-body');
-  if (!tbody) return;
-
-  if (catalogData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay productos. Agrega el primero.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = catalogData.map(p => {
-    const img = getImage(p);
-    const thumb = img
-      ? `<img src="${img}" class="admin-thumb" alt="${p.name}">`
-      : `<div class="admin-thumb-placeholder"><i class="bi bi-box"></i></div>`;
-
-    const stockBtn = p.stock
-      ? `<button class="stock-btn in-stock" onclick="toggleStock('${p.id}')">En Stock</button>`
-      : `<button class="stock-btn out-stock" onclick="toggleStock('${p.id}')">Agotado</button>`;
-
-    return `
-      <tr>
-        <td>
-          <div class="d-flex align-items-center gap-3">
-            ${thumb}
-            <div>
-              <div class="fw-semibold" style="font-size:0.9rem;">${p.name}</div>
-              ${p.desc ? `<div class="text-muted" style="font-size:0.75rem;">${p.desc.slice(0,45)}${p.desc.length>45?'...':''}</div>` : ''}
-            </div>
-          </div>
-        </td>
-        <td><span class="product-badge">${p.category}</span></td>
-        <td><span class="fw-bold">$${parseFloat(p.price).toFixed(2)}</span></td>
-        <td>${stockBtn}</td>
-        <td class="text-center">
-          <button class="btn btn-sm btn-primary me-1" onclick="openEditModal('${p.id}')" title="Editar">
-            <i class="bi bi-pencil"></i>
-          </button>
-          <button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')" title="Eliminar">
-            <i class="bi bi-trash"></i>
-          </button>
-        </td>
-      </tr>`;
-  }).join('');
+      </div>
+    </div>`;
 }
 
 // ─── CARRITO ──────────────────────────────
-window.addToCart = function(id, btn) {
-  const p  = catalogData.find(x => x.id === id);
-  const ex = cart.find(x => x.id === id);
-  if (ex) ex.quantity++;
-  else cart.push({ ...p, quantity: 1 });
-
-  if (btn) {
-    btn.classList.add('added');
-    btn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>¡Agregado!';
-    setTimeout(() => {
-      btn.classList.remove('added');
-      btn.innerHTML = '<i class="bi bi-cart-plus me-2"></i>Agregar al carrito';
-    }, 900);
+// ─── CARRITO ──────────────────────────────
+window.addToCart = function(id, measure, priceType = 'unit') {
+  const p = catalogData.find(x => x.id === id);
+  if (!p) return;
+  
+  const isBulk = priceType === 'bulk';
+  const cartPrice = isBulk ? parseFloat(p.bulkPrice) : parseFloat(p.price);
+  const cartLabel = isBulk ? ' (Ciento)' : '';
+  
+  // Ahora la llave del carrito considera si es unidad o ciento
+  const cartKey = measure ? `${id}-${measure}-${priceType}` : `${id}-${priceType}`;
+  
+  const ex = cart.find(x => x.cartKey === cartKey);
+  if (ex) {
+    ex.quantity++;
+  } else {
+    cart.push({ 
+      ...p, 
+      price: cartPrice, // Guardamos el precio correcto (unidad o bulk)
+      cartName: p.name + cartLabel, // Le añadimos "(Ciento)" al nombre si aplica
+      quantity: 1, 
+      cartKey, 
+      selectedMeasure: measure 
+    });
   }
   updateCartUI();
+
+  // Animación del carrito flotante para dar feedback visual
+  const floatingCart = document.getElementById('floating-cart');
+  if (floatingCart) {
+    floatingCart.style.transform = 'scale(1.2)';
+    setTimeout(() => floatingCart.style.transform = 'scale(1)', 200);
+  }
 };
 
 window.changeQty = function(idx, delta) {
@@ -439,11 +323,11 @@ window.changeQty = function(idx, delta) {
 };
 
 function updateCartUI() {
-  const container = document.getElementById('cart-items');
-  const count     = cart.reduce((s, i) => s + i.quantity, 0);
-  const countEl   = document.getElementById('floatingCartCount');
+  const count   = cart.reduce((s, i) => s + i.quantity, 0);
+  const countEl = document.getElementById('floatingCartCount');
   if (countEl) countEl.innerText = count;
 
+  const container = document.getElementById('cart-items');
   if (!container) return;
 
   if (cart.length === 0) {
@@ -454,6 +338,8 @@ function updateCartUI() {
       </div>`;
     const totalEl = document.getElementById('cart-total');
     if (totalEl) totalEl.innerText = '$0.00';
+    const sendBtn = document.getElementById('btn-send-quote') || document.getElementById('btn-whatsapp');
+    if (sendBtn) sendBtn.disabled = true;
     return;
   }
 
@@ -462,13 +348,14 @@ function updateCartUI() {
     const imgEl = img
       ? `<img src="${img}" class="cart-item-img" alt="${item.name}">`
       : `<div class="cart-item-icon-placeholder"><i class="bi bi-box"></i></div>`;
-
     return `
       <li class="d-flex align-items-center gap-3 mb-3 p-2 bg-white rounded-3 shadow-sm">
         ${imgEl}
-        <div class="flex-grow-1" style="min-width:0;">
-          <div class="fw-semibold text-truncate" style="font-size:0.88rem;">${item.name}</div>
-          <div class="text-muted" style="font-size:0.75rem;">$${parseFloat(item.price).toFixed(2)} c/u</div>
+        <div class="cart-item-content flex-grow-1" style="min-width:0;">
+          <div class="fw-semibold text-truncate" style="font-size:.88rem;">
+            ${item.cartName || item.name}${item.selectedMeasure ? ` · ${item.selectedMeasure}` : ''}
+          </div>
+          <div class="text-muted" style="font-size:.75rem;">$${parseFloat(item.price).toFixed(2)} c/u</div>
           <div class="d-flex align-items-center gap-2 mt-1">
             <button class="qty-btn" onclick="changeQty(${idx}, -1)">−</button>
             <span class="fw-bold">${item.quantity}</span>
@@ -476,9 +363,7 @@ function updateCartUI() {
           </div>
         </div>
         <div class="text-end flex-shrink-0">
-          <div class="fw-bold" style="color:var(--orange);font-size:0.95rem;">
-            $${(item.price * item.quantity).toFixed(2)}
-          </div>
+          <div class="fw-bold" style="color:var(--orange);font-size:.95rem;">$${(item.price * item.quantity).toFixed(2)}</div>
           <button class="btn btn-sm text-danger p-0 mt-1" onclick="changeQty(${idx}, -9999)">
             <i class="bi bi-trash"></i>
           </button>
@@ -489,20 +374,66 @@ function updateCartUI() {
   const total   = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   const totalEl = document.getElementById('cart-total');
   if (totalEl) totalEl.innerText = `$${total.toFixed(2)}`;
+
+  const sendBtn = document.getElementById('btn-send-quote') || document.getElementById('btn-whatsapp');
+  if (sendBtn) sendBtn.disabled = false;
 }
 
 // ─── WHATSAPP ─────────────────────────────
-document.getElementById('btn-whatsapp')?.addEventListener('click', () => {
-  if (!cart.length) return alert("Agregue productos al carrito primero.");
+function sendWhatsApp() {
+  if (!cart.length) return;
   let msg = "¡Hola Vecino! 👋 Cotización de Ferretería Lozada:\n\n";
   cart.forEach(i => {
-    msg += `✅ ${i.quantity}x ${i.name} — $${(i.price * i.quantity).toFixed(2)}\n`;
+    const medida = i.selectedMeasure ? ` (${i.selectedMeasure})` : '';
+    msg += `✅ ${i.quantity}x ${i.cartName || i.name}${medida} — $${(i.price * i.quantity).toFixed(2)}\n`;
   });
   const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   msg += `\n*Total Referencial: $${total.toFixed(2)}*\n\n¿Me confirma disponibilidad?`;
   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+document.getElementById('btn-whatsapp')?.addEventListener('click', sendWhatsApp);
+document.getElementById('btn-send-quote')?.addEventListener('click', sendWhatsApp);
+
+// ─── FILTROS CATÁLOGO ─────────────────────
+document.getElementById('category-filters')?.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-filter]');
+  if (!btn) return;
+  publicCategoryFilter = btn.dataset.filter === 'Todos' ? '' : btn.dataset.filter;
+  refreshCategoryFilters();
+  renderCatalog();
 });
 
+document.getElementById('public-search')?.addEventListener('input', e => {
+  publicSearchQuery = e.target.value.trim();
+  renderCatalog();
+});
+
+window.applyFilters = function() {
+  publicCategoryFilter = document.getElementById('filter-category')?.value || '';
+  publicStockFilter    = document.querySelector('input[name="public-stock-filter"]:checked')?.value || 'all';
+  publicPriceMin       = document.getElementById('price-min')?.value.trim() || '';
+  publicPriceMax       = document.getElementById('price-max')?.value.trim() || '';
+  renderCatalog();
+  bootstrap.Modal.getInstance(document.getElementById('filtersModal'))?.hide();
+};
+
+window.clearFilters = function() {
+  publicSearchQuery = ''; publicCategoryFilter = '';
+  publicStockFilter = 'all'; publicPriceMin = ''; publicPriceMax = '';
+  const searchEl = document.getElementById('public-search');
+  const stockAll = document.querySelector('input[name="public-stock-filter"][value="all"]');
+  const catEl    = document.getElementById('filter-category');
+  const minEl    = document.getElementById('price-min');
+  const maxEl    = document.getElementById('price-max');
+  if (searchEl) searchEl.value = '';
+  if (stockAll) stockAll.checked = true;
+  if (catEl)    catEl.value     = '';
+  if (minEl)    minEl.value     = '';
+  if (maxEl)    maxEl.value     = '';
+  refreshCategoryFilters();
+  renderCatalog();
+};
+
 // ─── INIT ─────────────────────────────────
-refreshCategorySelects();
 updateCartUI();

@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Ferretería Lozada</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.4/font/bootstrap-icons.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body class="admin-body">
+
+  <nav class="navbar navbar-expand-lg sticky-top d-none" id="admin-navbar">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand" href="#" id="admin-logo-link">
+        <img src="Assets/icono.svg" alt="Ferretería Lozada">
+        <span>FERRETERÍA LOZADA</span>
+      </a>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <span class="text-muted small" id="admin-user-email"></span>
+        <a href="#" id="btn-ver-tienda" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-shop me-1"></i>Ver Tienda
+        </a>
+        <button class="btn btn-outline-danger btn-sm" id="btn-logout">
+          <i class="bi bi-box-arrow-right me-1"></i>Salir
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="login-screen" class="login-screen">
+    <div class="login-box">
+      <div class="login-logo">
+        <img src="Assets/icono.svg" alt="Logo" onerror="this.style.display='none'">
+        <h4 class="fw-bold mb-0 mt-2">Ferretería Lozada</h4>
+        <p class="text-muted small mb-0">Panel de Administración</p>
+      </div>
+
+      <div id="login-error" class="alert alert-danger d-none py-2 small" role="alert">
+        <i class="bi bi-exclamation-circle me-1"></i>
+        <span id="login-error-msg"></span>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold small">Correo electrónico</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+          <input type="email" id="login-email" class="form-control" placeholder="admin@ferreterialozada.com" autocomplete="email">
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label fw-semibold small">Contraseña</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••" autocomplete="current-password">
+          <button class="btn btn-outline-secondary" type="button" id="toggle-password" title="Mostrar/ocultar contraseña">
+            <i class="bi bi-eye" id="toggle-password-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <button id="btn-login" class="btn btn-orange w-100 fw-bold py-2">
+        <span id="btn-login-text"><i class="bi bi-shield-lock me-2"></i>Iniciar Sesión</span>
+        <span id="btn-login-spinner" class="d-none">
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>Verificando...
+        </span>
+      </button>
+
+      <div class="text-center mt-3">
+        <a href="index.html" class="text-muted small text-decoration-none">
+          <i class="bi bi-arrow-left me-1"></i>Volver a la tienda
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-panel" class="d-none">
+    <div class="container-fluid px-4 py-4">
+
+      <div class="row mb-4 align-items-center">
+        <div class="col-lg-8">
+          <h2 class="fw-bold mb-1">Panel de Control</h2>
+          <p class="text-muted small mb-0">Gestione productos, precios y disponibilidad</p>
+          <div class="mt-3 d-flex flex-wrap gap-2">
+            <button id="btn-open-categories" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-tags me-1"></i>Gestionar categorías
+            </button>
+            <button id="btn-open-measures" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-rulers me-1"></i>Editar medidas
+            </button>
+          </div>
+        </div>
+        <div class="col-auto ms-auto">
+          <button id="btn-new-product-modal" class="btn fw-bold shadow-sm px-4 btn-orange" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="bi bi-plus-lg me-2"></i>Nuevo Producto
+          </button>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-lg admin-panel-card">
+        <div class="card-header bg-light border-bottom p-3">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="text" id="product-search" class="form-control" placeholder="Buscar productos por nombre...">
+              </div>
+            </div>
+            <div class="col-md-6 d-flex gap-2">
+              <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#adminFiltersModal">
+                <i class="bi bi-funnel me-2"></i>Filtros
+              </button>
+              <button class="btn btn-outline-danger btn-sm" id="admin-clear-filters" title="Limpiar filtros">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="admin-product-count" class="px-3 py-2 bg-white border-bottom small text-muted"></div>
+        <div class="table-responsive">
+          <table class="table admin-table mb-0">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Medidas</th>
+                <th>Precio rápido</th>
+                <th>Disponibilidad</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body">
+              <tr><td colspan="6" class="text-center py-4 text-muted">
+                <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>Cargando...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header text-white modal-header-dark">
+          <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Nuevo Producto</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="productForm">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nombre del Producto</label>
+              <input type="text" id="p-name" class="form-control" placeholder="Ej: Taladro percutor 700W" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Descripción</label>
+              <textarea id="p-desc" class="form-control" rows="2" placeholder="Ej: Ideal para perforar concreto, madera y metal..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Imagen del Producto</label>
+              <input type="file" id="p-image" class="form-control" accept="image/*">
+              <div class="progress mt-2 d-none" id="p-progress-bar" style="height:4px;">
+                <div class="progress-bar bg-orange" id="p-progress-fill" style="width:0%"></div>
+              </div>
+              <small class="text-muted">Máx. 5MB · JPG, PNG o WebP</small>
+            </div>
+            
+            <div class="mb-3 mt-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <label class="form-label fw-semibold mb-0">Categoría</label>
+                <button type="button" id="p-open-categories-btn" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-tags me-1"></i>Gestionar
+                </button>
+              </div>
+              <select id="p-category" class="form-select category-select"></select>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Precio Unidad ($)</label>
+                <input type="number" id="p-price" class="form-control" step="0.01" min="0" placeholder="0.00" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Precio x Ciento ($) <span class="text-muted fw-normal small">(Opcional)</span></label>
+                <input type="number" id="p-bulk-price" class="form-control" step="0.01" min="0" placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="mb-3 mt-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <label class="form-label fw-semibold mb-0">Medida</label>
+                <button type="button" id="p-open-measures-btn" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-rulers me-1"></i>Editor
+                </button>
+              </div>
+              <div class="row g-2">
+                <div class="col-6">
+                  <select id="p-measure-section" class="form-select form-select-sm"></select>
+                </div>
+                <div class="col-6">
+                  <select id="p-measure-option" class="form-select form-select-sm"></select>
+                </div>
+              </div>
+              <button type="button" id="p-add-measure-btn" class="btn btn-sm btn-outline-secondary mt-2">
+                <i class="bi bi-plus-lg me-1"></i>Añadir medida
+              </button>
+              <div class="measure-tags" id="p-measures-list"></div>
+            </div>
+            <div class="mt-4">
+              <button type="submit" id="p-submit-btn" class="btn w-100 fw-bold py-2 btn-orange">
+                <span id="p-submit-text"><i class="bi bi-cloud-upload me-2"></i>Guardar Producto</span>
+                <span class="spinner-border spinner-border-sm ms-2 d-none" id="p-spinner" role="status"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header text-white modal-header-blue">
+          <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Editar Producto</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editProductForm">
+            <input type="hidden" id="e-id">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nombre</label>
+              <input type="text" id="e-name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Descripción</label>
+              <textarea id="e-desc" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold d-block">Imagen actual</label>
+              <div id="edit-img-preview" class="edit-img-preview mb-2"></div>
+              <input type="file" id="e-image" class="form-control mb-2" accept="image/*">
+              <button type="button" id="e-remove-image-btn" class="btn btn-sm btn-outline-danger mt-1">
+                <i class="bi bi-trash me-1"></i>Quitar imagen
+              </button>
+            </div>
+            
+            <div class="mb-3 mt-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <label class="form-label fw-semibold mb-0">Categoría</label>
+                <button type="button" id="e-open-categories-btn" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-tags me-1"></i>Gestionar
+                </button>
+              </div>
+              <select id="e-category" class="form-select category-select"></select>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Precio Unidad ($)</label>
+                <input type="number" id="e-price" class="form-control" step="0.01" min="0" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Precio x Ciento ($) <span class="text-muted fw-normal small">(Opcional)</span></label>
+                <input type="number" id="e-bulk-price" class="form-control" step="0.01" min="0" placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="mb-3 mt-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <label class="form-label fw-semibold mb-0">Medida</label>
+                <button type="button" id="e-open-measures-btn" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-rulers me-1"></i>Editor
+                </button>
+              </div>
+              <div class="row g-2">
+                <div class="col-6">
+                  <select id="e-measure-section" class="form-select form-select-sm"></select>
+                </div>
+                <div class="col-6">
+                  <select id="e-measure-option" class="form-select form-select-sm"></select>
+                </div>
+              </div>
+              <button type="button" id="e-add-measure-btn" class="btn btn-sm btn-outline-secondary mt-2">
+                <i class="bi bi-plus-lg me-1"></i>Añadir medida
+              </button>
+              <div class="measure-tags" id="e-measures-list"></div>
+            </div>
+            <div class="mt-4">
+              <button type="submit" id="e-submit-btn" class="btn w-100 fw-bold py-2 btn-blue">
+                <span id="e-submit-text"><i class="bi bi-check-circle me-2"></i>Guardar Cambios</span>
+                <span class="spinner-border spinner-border-sm ms-2 d-none" id="e-spinner" role="status"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="categoryManagerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
+      <div class="modal-content">
+        <div class="modal-header text-white modal-header-dark">
+          <h6 class="modal-title fw-bold"><i class="bi bi-tags me-2"></i>Gestionar Categorías</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-3">
+          <ul id="cat-manager-list" class="list-unstyled mb-3"></ul>
+          <div class="input-group input-group-sm">
+            <input type="text" id="new-cat-input" class="form-control" placeholder="Nueva categoría...">
+            <button id="btn-cat-manager-add" class="btn fw-bold cat-manager-add-btn" type="button">
+              <i class="bi bi-plus-lg"></i> Agregar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="measureManagerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:360px;">
+      <div class="modal-content">
+        <div class="modal-header text-white modal-header-dark">
+          <h6 class="modal-title fw-bold"><i class="bi bi-rulers me-2"></i>Editar Medidas</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-3">
+          <div id="measure-manager-list" class="mb-3"></div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Sección</label>
+            <select id="new-measure-section" class="form-select form-select-sm"></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Nueva medida</label>
+            <div class="input-group input-group-sm">
+              <input type="text" id="new-measure-value" class="form-control" placeholder='Ej: 1/2, 50, 16'>
+              <select id="new-measure-type" class="form-select" style="max-width: 110px;">
+                <option value="">(Tipo)</option>
+                <option value='"'>Pulgadas (")</option>
+                <option value="cm">cm</option>
+                <option value="mm">mm</option>
+                <option value="m">metros (m)</option>
+                <option value="W">Watts (W)</option>
+                <option value="V">Voltios (V)</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="L">Litros (L)</option>
+              </select>
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" id="btn-add-new-measure" class="btn btn-sm btn-orange w-100">Agregar medida</button>
+            <button type="button" id="btn-add-new-section" class="btn btn-sm btn-blue w-100">Nueva sección</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="newSectionModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title fw-bold">Nueva Sección de Medidas</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label small fw-semibold">Nombre de la sección</label>
+          <input type="text" id="new-section-name" class="form-control" placeholder="Ej: Pinturas, Electricidad">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-confirm-new-section">Agregar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="adminFiltersModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="bi bi-funnel me-2"></i>Filtros Avanzados</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Categoría</label>
+            <select id="admin-filter-category" class="form-select">
+              <option value="">Todas las categorías</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Disponibilidad</label>
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" name="admin-stock-filter" id="admin-stock-all" value="all" checked>
+              <label class="btn btn-outline-secondary" for="admin-stock-all">Todos</label>
+              <input type="radio" class="btn-check" name="admin-stock-filter" id="admin-stock-in" value="in">
+              <label class="btn btn-outline-success" for="admin-stock-in">En Stock</label>
+              <input type="radio" class="btn-check" name="admin-stock-filter" id="admin-stock-out" value="out">
+              <label class="btn btn-outline-danger" for="admin-stock-out">Agotado</label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Rango de Precio</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="number" id="admin-price-min" class="form-control" placeholder="Mínimo" min="0" step="0.01">
+              </div>
+              <div class="col-6">
+                <input type="number" id="admin-price-max" class="form-control" placeholder="Máximo" min="0" step="0.01">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-admin-filters">Limpiar</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-apply-admin-filters">Aplicar Filtros</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="measureSelectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header text-white modal-header-dark">
+          <h6 class="modal-title fw-bold"><i class="bi bi-rulers me-2"></i>Seleccionar Medida</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-3">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Sección</label>
+            <select id="measure-section-select" class="form-select form-select-sm"></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Medida</label>
+            <select id="measure-option-select" class="form-select form-select-sm" disabled>
+              <option value="">Seleccionar medida...</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-confirm-measure">Seleccionar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="notifModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header text-white modal-header-dark">
+          <h6 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>Aviso</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-3">
+          <p id="notif-message" class="mb-0 small"></p>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-orange" data-bs-dismiss="modal">Entendido</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
