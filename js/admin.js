@@ -1,6 +1,5 @@
 // ════════════════════════════════════════════
-//  FERRETERÍA LOZADA — admin.js  v2
-//  Panel de administración con variantes
+//  FERRETERÍA LOZADA — admin.js  v3 (Limpio y sin duplicados)
 // ════════════════════════════════════════════
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -44,7 +43,10 @@ let currentMeasureProductId = null;
 let editCurrentImageB64 = '';
 let editNewImageB64     = '';
 let editImageRemoved    = false;
-let openVariantGroups = new Set(); // Recuerda qué carpetas están abiertas
+let editingMeasureSections = new Set(); // Recuerda qué secciones están en modo edición 
+let unsubProductos      = null;
+let unsubMedidas        = null;
+let openVariantGroups = new Set();
 
 // ─── COMPRIMIR IMAGEN ─────────────────────
 function compressImage(file, maxWidth = 800, quality = 0.75) {
@@ -113,16 +115,25 @@ function getMeasureLabel(p) {
   return p.measure || 'Sin medida';
 }
 
-// ─── AUTH STATE ───────────────────────────
+// ─── AUTH STATE & DATABASESE ──────────────
 onAuthStateChanged(auth, user => {
   document.getElementById('login-screen')?.classList.toggle('d-none', !!user);
   document.getElementById('admin-panel')?.classList.toggle('d-none', !user);
   document.getElementById('admin-navbar')?.classList.toggle('d-none', !user);
   const emailEl = document.getElementById('admin-user-email');
   if (emailEl) emailEl.textContent = user?.email || '';
+
+  if (user) {
+    // Solo cargamos la base de datos si el inicio de sesión es exitoso
+    iniciarBaseDeDatos();
+  } else {
+    // Limpiamos los "escuchadores" si cerramos sesión
+    if (unsubMedidas) unsubMedidas();
+    if (unsubProductos) unsubProductos();
+  }
 });
 
-// ─── LOGIN ────────────────────────────────
+// ─── LOGIN & LOGOUT ───────────────────────
 document.getElementById('btn-login')?.addEventListener('click', async () => {
   const email    = document.getElementById('login-email')?.value.trim();
   const password = document.getElementById('login-password')?.value;
@@ -153,129 +164,67 @@ document.getElementById('toggle-password')?.addEventListener('click', () => {
   icon?.classList.toggle('bi-eye-slash');
 });
 
-// ─── LOGOUT + REDIRECCIÓN SEGURA ─────────
 async function doSignOut(redirectTo = 'index.html') {
   await signOut(auth);
   window.location.href = redirectTo;
 }
 
 document.getElementById('btn-logout')?.addEventListener('click', () => doSignOut('index.html'));
+document.getElementById('admin-logo-link')?.addEventListener('click', e => { e.preventDefault(); doSignOut('index.html'); });
+document.getElementById('btn-ver-tienda')?.addEventListener('click', e => { e.preventDefault(); doSignOut('catalogo.html'); });
 
-// Logo → cierra sesión y va a inicio
-document.getElementById('admin-logo-link')?.addEventListener('click', e => {
-  e.preventDefault();
-  doSignOut('index.html');
-});
 
-// Ver Tienda → cierra sesión y va al catálogo
-document.getElementById('btn-ver-tienda')?.addEventListener('click', e => {
-  e.preventDefault();
-  doSignOut('catalogo.html');
-});
-
-// ─── CATEGORÍAS ───────────────────────────
-function refreshCategorySelects() {
-  document.querySelectorAll('.category-select').forEach(s => {
-    const cur = s.value;
-    s.innerHTML = dynamicCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-    if (dynamicCategories.includes(cur)) s.value = cur;
+// ─── FIRESTORE: CARGA DE DATOS ────────────
+function iniciarBaseDeDatos() {
+  // Escuchar Medidas y Categorías
+  unsubMedidas = onSnapshot(medidasRef, snapshot => {
+    if (snapshot.empty) {
+      const defaults = {
+        'Medidas Eléctricas': ['Cable 1.5mm²','Cable 2.5mm²','Interruptor 1P','Toma 10A','Toma 16A'],
+        'Tornillos':          ['3mm','4mm','5mm','6mm','8mm','10mm'],
+        'Material Eléctrico': ['Conduit 20mm','Cinta aislante 3M','Toma doble'],
+        'Tubería':            ['1/2"','3/4"','1"','1 1/4"','2"'],
+        'Ferretería':         ['50 cm','1 m','2 m','3 m','5 m']
+      };
+      measureSections = defaults;
+      addDoc(medidasRef, { sections: defaults, categories: [] });
+    } else {
+      const data = snapshot.docs[0].data();
+      medidasDocId    = snapshot.docs[0].id;
+      measureSections = data.sections || {};
+      if (data.categories && data.categories.length > 0) {
+        dynamicCategories = data.categories;
+      }
+    }
+    setupMeasureControls('p');
+    setupMeasureControls('e');
+    refreshCategorySelects();
   });
-  const adminCatFilter = document.getElementById('admin-filter-category');
-  if (adminCatFilter) {
-    adminCatFilter.innerHTML = '<option value="">Todas las categorías</option>' +
-      dynamicCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-  }
-}
 
-// ─── MEDIDAS ──────────────────────────────
-function setupMeasureControls(prefix) {
-  const sectionEl = document.getElementById(`${prefix}-measure-section`);
-  const optionEl  = document.getElementById(`${prefix}-measure-option`);
-  if (!sectionEl || !optionEl) return;
-  const sections = Object.keys(measureSections);
-  const prev = sectionEl.value;
-  sectionEl.innerHTML = sections.map(s => `<option value="${s}">${s}</option>`).join('');
-  const selected = sections.includes(prev) ? prev : sections[0];
-  if (selected) {
-    sectionEl.value = selected;
-    optionEl.innerHTML = (measureSections[selected] || []).map(v => `<option value="${v}">${v}</option>`).join('');
-  }
-}
+  // Escuchar Productos
+  unsubProductos = onSnapshot(productosRef, snapshot => {
+    catalogData = [];
+    let newCatsFound = false;
 
-// ─── LÓGICA DE MEDIDAS LIMPIA Y CORREGIDA ───
+    snapshot.forEach(d => {
+      const data = d.data();
+      catalogData.push({ id: d.id, ...data });
+      if (data.category && !dynamicCategories.includes(data.category)) {
+        dynamicCategories.push(data.category);
+        newCatsFound = true;
+      }
+    });
 
-// ─── LÓGICA DE MEDIDAS LIMPIA Y CORREGIDA ───
+    if (newCatsFound && medidasDocId) {
+      updateDoc(doc(db, 'medidas', medidasDocId), { categories: dynamicCategories });
+    }
 
-window.addMeasureToForm = function(prefix) {
-  const optionSelect = document.getElementById(`${prefix}-measure-option`);
-  
-  // Verificamos que haya una opción seleccionada válida
-  if (!optionSelect || optionSelect.value === "") return;
-
-  // Extraemos SOLO el texto visible de la opción elegida, ignorando la categoría
-  const val = optionSelect.options[optionSelect.selectedIndex].text;
-
-  const targetArray = prefix === 'p' ? productMeasures : editMeasures;
-
-  // Evitamos duplicados
-  if (!targetArray.includes(val)) {
-    targetArray.push(val);
-    renderMeasureTags(prefix, targetArray);
-  }
-};
-
-window.renderMeasureTags = function(prefix, list) {
-  const container = document.getElementById(`${prefix}-measure-list`);
-  if (!container) return;
-  
-  // Se renderiza únicamente el valor 'm', sin categorías extras
-  container.innerHTML = list.map((m, i) => `
-    <span class="badge bg-dark me-1 mb-1 d-inline-flex align-items-center px-2 py-1" style="font-size:0.8rem; letter-spacing: 0.5px;">
-      ${m}
-      <button type="button" class="btn-close btn-close-white ms-2 measure-chip-btn" data-prefix="${prefix}" data-index="${i}" style="font-size:0.5rem;"></button>
-    </span>
-  `).join('');
-};
-
-function resetProductMeasures() {
-  productMeasures = [];
-  renderMeasureTags('p', productMeasures);
-}
-
-// ─── FIRESTORE: MEDIDAS ───────────────────
-onSnapshot(medidasRef, snapshot => {
-  if (snapshot.empty) {
-    const defaults = {
-      'Medidas Eléctricas': ['Cable 1.5mm²','Cable 2.5mm²','Interruptor 1P','Toma 10A','Toma 16A'],
-      'Tornillos':          ['3mm','4mm','5mm','6mm','8mm','10mm'],
-      'Material Eléctrico': ['Conduit 20mm','Cinta aislante 3M','Toma doble'],
-      'Tubería':            ['1/2"','3/4"','1"','1 1/4"','2"'],
-      'Ferretería':         ['50 cm','1 m','2 m','3 m','5 m']
-    };
-    measureSections = defaults;
-    addDoc(medidasRef, { sections: defaults });
-  } else {
-    medidasDocId    = snapshot.docs[0].id;
-    measureSections = snapshot.docs[0].data().sections || {};
-  }
-  setupMeasureControls('p');
-  setupMeasureControls('e');
-});
-
-// ─── FIRESTORE: PRODUCTOS ─────────────────
-onSnapshot(productosRef, snapshot => {
-  catalogData = [];
-  snapshot.forEach(d => {
-    const data = d.data();
-    catalogData.push({ id: d.id, ...data });
-    if (data.category && !dynamicCategories.includes(data.category))
-      dynamicCategories.push(data.category);
+    refreshCategorySelects();
+    renderAdminTable();
   });
-  refreshCategorySelects();
-  renderAdminTable();
-});
+}
 
-// ─── RENDER TABLA ADMIN ───────────────────
+// ─── TABLA DE ADMIN ───────────────────────
 function renderAdminTable() {
   const tbody = document.getElementById('admin-table-body');
   if (!tbody) return;
@@ -302,7 +251,6 @@ function renderAdminTable() {
     return;
   }
 
-  // Agrupar por nombre
   const groups = {};
   const order  = [];
   filtered.forEach(p => {
@@ -318,7 +266,6 @@ function renderAdminTable() {
   }).join('');
 }
 
-// ─── FILA PRODUCTO ÚNICO ──────────────────
 function renderSingleAdminRow(p) {
   const img = getImage(p);
   const thumb = img
@@ -374,7 +321,6 @@ function renderSingleAdminRow(p) {
     </tr>`;
 }
 
-// ─── FILAS GRUPO DE VARIANTES ─────────────
 function renderGroupAdminRows(products, gIdx) {
   const base = products[0];
   const img  = getImage(base);
@@ -458,6 +404,7 @@ function renderGroupAdminRows(products, gIdx) {
   return headerRow + variantRows;
 }
 
+// ─── ACCIONES RÁPIDAS ─────────────────────
 window.toggleVariantGroup = function(gIdx) {
   const rows   = document.querySelectorAll(`tr[data-group="${gIdx}"]`);
   const icon   = document.getElementById(`group-icon-${gIdx}`);
@@ -470,7 +417,7 @@ window.toggleVariantGroup = function(gIdx) {
     icon.classList.toggle('bi-chevron-down',   hidden);
   }
   
-  // Guardamos en memoria si abriste o cerraste la carpeta
+  // Guardamos en la memoria para que no se pierda al actualizar la tabla
   if (hidden) {
     openVariantGroups.add(gIdx);
   } else {
@@ -478,12 +425,11 @@ window.toggleVariantGroup = function(gIdx) {
   }
 };
 
-// ─── AÑADIR VARIANTE ─────────────────────
+// ¡AQUÍ ESTÁ LA FUNCIÓN QUE SE TE HABÍA BORRADO!
 window.createVariant = function(id) {
   const p = catalogData.find(x => x.id === id);
   if (!p) return;
 
-  // Pre-rellenar modal con datos del producto padre
   document.getElementById('p-name').value       = p.name;
   document.getElementById('p-desc').value       = p.desc  || '';
   document.getElementById('p-price').value      = p.price || '';
@@ -494,12 +440,11 @@ window.createVariant = function(id) {
   const catSel = document.getElementById('p-category');
   if (catSel && p.category) catSel.value = p.category;
 
-  // Limpiar medida — el usuario define la nueva
   productMeasures = [];
   renderMeasureTags('p', productMeasures);
   setupMeasureControls('p');
+  autoSelectMeasureSection('p', p.measures && p.measures.length > 0 ? p.measures : [p.measure]);
 
-  // Mostrar nota informativa
   let note = document.getElementById('variant-note');
   if (!note) {
     note = document.createElement('div');
@@ -510,16 +455,10 @@ window.createVariant = function(id) {
   }
   note.classList.remove('d-none');
 
-  // Cerrar modales abiertos y abrir el de agregar
   document.querySelectorAll('.modal.show').forEach(m => bootstrap.Modal.getInstance(m)?.hide());
   setTimeout(() => new bootstrap.Modal(document.getElementById('addProductModal')).show(), 250);
 };
 
-document.getElementById('addProductModal')?.addEventListener('hidden.bs.modal', () =>
-  document.getElementById('variant-note')?.classList.add('d-none')
-);
-
-// ─── ACCIONES DE PRODUCTOS ────────────────
 window.toggleStock = async function(id) {
   const p = catalogData.find(x => x.id === id);
   if (p) await updateDoc(doc(db, 'productos', id), { stock: !p.stock });
@@ -534,15 +473,77 @@ window.quickUpdatePrice = async function(id, field, inputEl) {
   const val = parseFloat(inputEl.value);
   if (isNaN(val) || val < 0) return;
   try {
-    const updateData = {};
-    updateData[field] = val; // Puede ser 'price' o 'bulkPrice'
+    const updateData = {}; updateData[field] = val;
     await updateDoc(doc(db, 'productos', id), updateData);
     inputEl.classList.add('saved');
     setTimeout(() => inputEl.classList.remove('saved'), 1200);
   } catch { showNotif('No se pudo actualizar el precio.'); }
 };
 
-// ─── MODAL AGREGAR PRODUCTO ───────────────
+// ─── LÓGICA DE MEDIDAS (TABS) ─────────────
+function setupMeasureControls(prefix) {
+  const sectionEl = document.getElementById(`${prefix}-measure-section`);
+  const optionEl  = document.getElementById(`${prefix}-measure-option`);
+  if (!sectionEl || !optionEl) return;
+  const sections = Object.keys(measureSections);
+  const prev = sectionEl.value;
+  sectionEl.innerHTML = sections.map(s => `<option value="${s}">${s}</option>`).join('');
+  const selected = sections.includes(prev) ? prev : sections[0];
+  if (selected) {
+    sectionEl.value = selected;
+    optionEl.innerHTML = (measureSections[selected] || []).map(v => `<option value="${v}">${v}</option>`).join('');
+  }
+}
+
+function autoSelectMeasureSection(prefix, measuresArray) {
+  if (!measuresArray || measuresArray.length === 0) return;
+  let foundSection = null;
+  for (const [sec, vals] of Object.entries(measureSections)) {
+    if (vals.includes(measuresArray[0])) { foundSection = sec; break; }
+  }
+  if (foundSection) {
+    const sectionEl = document.getElementById(`${prefix}-measure-section`);
+    if (sectionEl) {
+      sectionEl.value = foundSection;
+      setupMeasureControls(prefix);
+    }
+  }
+}
+
+window.addMeasureToForm = function(prefix) {
+  const optionSelect = document.getElementById(`${prefix}-measure-option`);
+  if (!optionSelect || optionSelect.value === "") return;
+  const val = optionSelect.options[optionSelect.selectedIndex].text;
+  const targetArray = prefix === 'p' ? productMeasures : editMeasures;
+  if (!targetArray.includes(val)) {
+    targetArray.push(val);
+    renderMeasureTags(prefix, targetArray);
+  }
+};
+
+window.renderMeasureTags = function(prefix, list) {
+  const container = document.getElementById(`${prefix}-measures-list`);
+  if (!container) return;
+  container.innerHTML = list.map((m, i) => `
+    <div class="position-relative d-inline-block me-3 mb-2 mt-2">
+      <span class="badge bg-secondary px-3 py-2" style="font-size:0.85rem;">${m}</span>
+      <button type="button" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light measure-chip-btn" data-prefix="${prefix}" data-index="${i}" style="cursor: pointer; padding: 0.25rem 0.4rem; z-index: 10;">
+        <i class="bi bi-x-lg" style="font-size: 0.6rem;"></i>
+      </button>
+    </div>
+  `).join('');
+};
+
+function resetProductMeasures() {
+  productMeasures = [];
+  renderMeasureTags('p', productMeasures);
+}
+
+// ─── AÑADIR VARIANTE Y PRODUCTO ───────────
+document.getElementById('addProductModal')?.addEventListener('hidden.bs.modal', () =>
+  document.getElementById('variant-note')?.classList.add('d-none')
+);
+
 document.getElementById('productForm')?.addEventListener('submit', async function(e) {
   e.preventDefault();
   const btn = document.getElementById('p-submit-btn');
@@ -560,8 +561,7 @@ document.getElementById('productForm')?.addEventListener('submit', async functio
       desc:      document.getElementById('p-desc').value.trim(),
       category:  document.getElementById('p-category').value,
       price:     parseFloat(document.getElementById('p-price').value),
-      bulkPrice: document.getElementById('p-bulk-price').value
-                   ? parseFloat(document.getElementById('p-bulk-price').value) : null,
+      bulkPrice: document.getElementById('p-bulk-price').value ? parseFloat(document.getElementById('p-bulk-price').value) : null,
       stock:     true,
       measures:  productMeasures,
       imageB64,
@@ -569,15 +569,13 @@ document.getElementById('productForm')?.addEventListener('submit', async functio
     bootstrap.Modal.getInstance(document.getElementById('addProductModal'))?.hide();
     this.reset();
     resetProductMeasures();
-  } catch (err) {
-    showNotif('Error al guardar. Si tiene imagen, intente con una foto más pequeña.');
-  }
+  } catch (err) { showNotif('Error al guardar. Si tiene imagen, intente con una foto más pequeña.'); }
   btn.disabled = false;
   spinner?.classList.add('d-none');
   if (text) text.innerHTML = '<i class="bi bi-cloud-upload me-2"></i>Guardar Producto';
 });
 
-// ─── MODAL EDITAR PRODUCTO ────────────────
+// ─── EDITAR PRODUCTO ──────────────────────
 window.openEditModal = function(id) {
   const p = catalogData.find(x => x.id === id);
   if (!p) return;
@@ -596,6 +594,7 @@ window.openEditModal = function(id) {
   editMeasures = Array.isArray(p.measures) ? [...p.measures] : [];
   renderMeasureTags('e', editMeasures);
   setupMeasureControls('e');
+  autoSelectMeasureSection('e', editMeasures);
   const preview = document.getElementById('edit-img-preview');
   if (preview) {
     preview.innerHTML = editCurrentImageB64
@@ -638,8 +637,7 @@ document.getElementById('editProductForm')?.addEventListener('submit', async fun
       desc:      document.getElementById('e-desc').value.trim(),
       category:  document.getElementById('e-category').value,
       price:     parseFloat(document.getElementById('e-price').value),
-      bulkPrice: document.getElementById('e-bulk-price').value
-                   ? parseFloat(document.getElementById('e-bulk-price').value) : null,
+      bulkPrice: document.getElementById('e-bulk-price').value ? parseFloat(document.getElementById('e-bulk-price').value) : null,
       measures:  editMeasures,
       imageB64:  finalImageB64,
     });
@@ -660,44 +658,56 @@ function renderCatManagerList() {
   const ul = document.getElementById('cat-manager-list');
   if (!ul) return;
   ul.innerHTML = dynamicCategories.map((cat, idx) => `
-    <li class="cat-manager-item" data-cat-idx="${idx}">
-      <input type="text" value="${cat}" class="cat-manager-input">
-      <button type="button" class="btn-cat-save" data-action="save">✓</button>
-      <button type="button" class="btn-cat-del" data-action="delete"><i class="bi bi-trash"></i></button>
+    <li class="cat-manager-item d-flex align-items-center mb-2" data-cat-idx="${idx}">
+      <div class="btn-group btn-group-sm me-2">
+        <button type="button" class="btn btn-outline-secondary py-0 px-1" data-action="up" ${idx===0?'disabled':''}><i class="bi bi-chevron-up"></i></button>
+        <button type="button" class="btn btn-outline-secondary py-0 px-1" data-action="down" ${idx===dynamicCategories.length-1?'disabled':''}><i class="bi bi-chevron-down"></i></button>
+      </div>
+      <input type="text" value="${cat}" class="form-control form-control-sm me-2 cat-manager-input">
+      <button type="button" class="btn btn-sm btn-success me-1 btn-cat-save" data-action="save"><i class="bi bi-check-lg"></i></button>
+      <button type="button" class="btn btn-sm btn-danger btn-cat-del" data-action="delete"><i class="bi bi-trash"></i></button>
     </li>`).join('');
 }
+
+window.saveCategoriesAndRender = function() {
+  if (medidasDocId) updateDoc(doc(db, 'medidas', medidasDocId), { categories: dynamicCategories });
+  refreshCategorySelects();
+  renderCatManagerList();
+};
 
 document.getElementById('cat-manager-list')?.addEventListener('click', e => {
   const button = e.target.closest('button[data-action]');
   if (!button) return;
   const item = button.closest('.cat-manager-item');
   const idx  = Number(item?.dataset.catIdx);
-  if (button.dataset.action === 'save') {
+  const action = button.dataset.action;
+
+  if (action === 'up' && idx > 0) {
+    [dynamicCategories[idx - 1], dynamicCategories[idx]] = [dynamicCategories[idx], dynamicCategories[idx - 1]];
+    saveCategoriesAndRender();
+  }
+  if (action === 'down' && idx < dynamicCategories.length - 1) {
+    [dynamicCategories[idx + 1], dynamicCategories[idx]] = [dynamicCategories[idx], dynamicCategories[idx + 1]];
+    saveCategoriesAndRender();
+  }
+  if (action === 'save') {
     const newName = item.querySelector('.cat-manager-input')?.value.trim();
     if (!newName) return;
     const oldName = dynamicCategories[idx];
     dynamicCategories[idx] = newName;
-    catalogData.forEach(p => {
-      if (p.category === oldName)
-        updateDoc(doc(db, 'productos', p.id), { category: newName }).catch(console.error);
-    });
-    refreshCategorySelects();
-    renderCatManagerList();
+    catalogData.forEach(p => { if (p.category === oldName) updateDoc(doc(db, 'productos', p.id), { category: newName }); });
+    saveCategoriesAndRender();
   }
-  if (button.dataset.action === 'delete') {
+  if (action === 'delete') {
     const cat = dynamicCategories[idx];
-    if (catalogData.some(p => p.category === cat))
-      return showNotif(`La categoría "${cat}" tiene productos asignados.`);
+    if (catalogData.some(p => p.category === cat)) return showNotif(`La categoría "${cat}" tiene productos asignados.`);
     if (!confirm(`¿Eliminar la categoría "${cat}"?`)) return;
     dynamicCategories.splice(idx, 1);
-    refreshCategorySelects();
-    renderCatManagerList();
+    saveCategoriesAndRender();
   }
 });
 
-document.getElementById('cat-manager-list')?.addEventListener('input', e =>
-  e.target.closest('.cat-manager-item')?.classList.add('editing')
-);
+document.getElementById('cat-manager-list')?.addEventListener('input', e => e.target.closest('.cat-manager-item')?.classList.add('editing'));
 
 document.getElementById('btn-cat-manager-add')?.addEventListener('click', () => {
   const input = document.getElementById('new-cat-input');
@@ -706,8 +716,7 @@ document.getElementById('btn-cat-manager-add')?.addEventListener('click', () => 
   if (dynamicCategories.includes(name)) return showNotif('Esa categoría ya existe.');
   dynamicCategories.push(name);
   input.value = '';
-  refreshCategorySelects();
-  renderCatManagerList();
+  saveCategoriesAndRender();
 });
 
 // ─── GESTIÓN MEDIDAS ──────────────────────
@@ -716,31 +725,81 @@ function openMeasureManager() {
   new bootstrap.Modal(document.getElementById('measureManagerModal')).show();
 }
 
+window.moveSection = function(section, direction) {
+  const keys = Object.keys(measureSections);
+  const idx = keys.indexOf(section);
+  if (direction === 'up' && idx > 0) {
+    [keys[idx - 1], keys[idx]] = [keys[idx], keys[idx - 1]];
+  } else if (direction === 'down' && idx < keys.length - 1) {
+    [keys[idx + 1], keys[idx]] = [keys[idx], keys[idx + 1]];
+  } else return;
+
+  const newSections = {};
+  keys.forEach(k => newSections[k] = measureSections[k]);
+  measureSections = newSections;
+  if (medidasDocId) updateDoc(doc(db, 'medidas', medidasDocId), { sections: measureSections });
+  renderMeasureManager(); setupMeasureControls('p'); setupMeasureControls('e');
+};
+
+window.moveMeasure = function(section, idx, direction) {
+  const arr = measureSections[section];
+  if (direction === 'up' && idx > 0) {
+    [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+  } else if (direction === 'down' && idx < arr.length - 1) {
+    [arr[idx + 1], arr[idx]] = [arr[idx], arr[idx + 1]];
+  } else return;
+  if (medidasDocId) updateDoc(doc(db, 'medidas', medidasDocId), { sections: measureSections });
+  renderMeasureManager(); setupMeasureControls('p'); setupMeasureControls('e');
+};
+
 function renderMeasureManager() {
   const list          = document.getElementById('measure-manager-list');
   const sectionSelect = document.getElementById('new-measure-section');
   if (!list || !sectionSelect) return;
-  sectionSelect.innerHTML = Object.keys(measureSections).map(s => `<option value="${s}">${s}</option>`).join('');
-  list.innerHTML = Object.entries(measureSections).map(([section, items]) => {
+  
+  const sections = Object.keys(measureSections);
+  sectionSelect.innerHTML = sections.map(s => `<option value="${s}">${s}</option>`).join('');
+
+  list.innerHTML = sections.map((section, sIdx) => {
     const sid = section.replace(/\W+/g, '-');
+    const items = measureSections[section];
+    
+    // Leemos la memoria: ¿estaba esta sección en modo edición?
+    const isEditing = editingMeasureSections.has(section);
+    const dNoneClass = isEditing ? '' : 'd-none';
+
     return `
-      <div class="measure-manager-group">
-        <div class="measure-manager-header d-flex justify-content-between align-items-center">
-          <strong class="small">${section}</strong>
-          <button class="btn btn-sm btn-outline-primary btn-capsule" onclick="toggleEditSection('${section}')">
-            <i class="bi bi-pencil"></i> Editar
+      <div class="measure-manager-group mb-3 p-2 border rounded bg-light">
+        <div class="measure-manager-header d-flex justify-content-between align-items-center mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <div class="btn-group-vertical shadow-sm">
+              <button class="btn btn-sm btn-white border py-0 px-1" onclick="moveSection('${section}', 'up')" ${sIdx===0?'disabled':''}><i class="bi bi-caret-up-fill" style="font-size:0.65rem;"></i></button>
+              <button class="btn btn-sm btn-white border py-0 px-1" onclick="moveSection('${section}', 'down')" ${sIdx===sections.length-1?'disabled':''}><i class="bi bi-caret-down-fill" style="font-size:0.65rem;"></i></button>
+            </div>
+            <strong class="small">${section}</strong>
+          </div>
+          <button class="btn btn-sm ${isEditing ? 'btn-primary' : 'btn-outline-primary'} btn-capsule" onclick="toggleEditSection('${section}')">
+            <i class="bi ${isEditing ? 'bi-check-lg' : 'bi-pencil'}"></i> ${isEditing ? 'Listo' : 'Editar'}
           </button>
         </div>
-        <div class="measure-manager-items" id="ms-${sid}">
+        
+        <div class="measure-manager-items d-flex flex-column gap-1" id="ms-${sid}">
           ${items.map((item, idx) => `
-            <span class="measure-chip measure-chip-small">
-              ${item}
-              <button class="measure-chip-btn d-none" onclick="deleteMeasure('${section}', ${idx})">×</button>
-            </span>`).join('')}
+            <div class="d-flex align-items-center justify-content-between bg-white p-1 px-2 rounded border">
+              <span class="small">${item}</span>
+              <div class="${dNoneClass} measure-edit-actions">
+                <div class="btn-group btn-group-sm me-2">
+                  <button class="btn btn-outline-secondary py-0 px-1" onclick="moveMeasure('${section}', ${idx}, 'up')" ${idx===0?'disabled':''}><i class="bi bi-chevron-up"></i></button>
+                  <button class="btn btn-outline-secondary py-0 px-1" onclick="moveMeasure('${section}', ${idx}, 'down')" ${idx===items.length-1?'disabled':''}><i class="bi bi-chevron-down"></i></button>
+                </div>
+                <button class="btn btn-sm btn-danger py-0 px-2" onclick="deleteMeasure('${section}', ${idx})"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>`).join('')}
         </div>
-        <div class="measure-manager-footer d-none" id="mf-${sid}">
-          <button class="btn btn-sm btn-outline-danger btn-capsule" onclick="deleteMeasureSection('${section}')">
-            <i class="bi bi-trash"></i> Borrar Sección
+        
+        <div class="measure-manager-footer ${dNoneClass} mt-2" id="mf-${sid}">
+          <button class="btn btn-sm btn-outline-danger btn-capsule w-100" onclick="deleteMeasureSection('${section}')">
+            <i class="bi bi-trash"></i> Borrar Sección Completa
           </button>
         </div>
       </div>`;
@@ -748,9 +807,13 @@ function renderMeasureManager() {
 }
 
 window.toggleEditSection = function(section) {
-  const sid = section.replace(/\W+/g, '-');
-  document.getElementById(`ms-${sid}`)?.querySelectorAll('.measure-chip-btn').forEach(b => b.classList.toggle('d-none'));
-  document.getElementById(`mf-${sid}`)?.classList.toggle('d-none');
+  // Guardamos o borramos de la memoria según corresponda
+  if (editingMeasureSections.has(section)) {
+    editingMeasureSections.delete(section);
+  } else {
+    editingMeasureSections.add(section);
+  }
+  renderMeasureManager(); // Redibujamos manteniendo lo que estaba abierto
 };
 
 window.deleteMeasureSection = function(section) {
@@ -771,33 +834,24 @@ document.getElementById('btn-add-new-measure')?.addEventListener('click', () => 
   const valInput = document.getElementById('new-measure-value');
   const typeSelect = document.getElementById('new-measure-type');
   
-  // 1. Validar que no esté vacío
   if (!valInput || !valInput.value.trim()) return showNotif('Ingrese un número o valor.');
   
-  // 2. Combinar el valor con el tipo de medida
   let finalMeasure = valInput.value.trim();
-  
   if (typeSelect && typeSelect.value !== "") {
     if (typeSelect.value === '"') {
-      finalMeasure = finalMeasure + typeSelect.value; // Sin espacio para pulgadas
+      finalMeasure = finalMeasure + typeSelect.value;
     } else {
-      finalMeasure = finalMeasure + " " + typeSelect.value; // Con espacio para el resto
+      finalMeasure = finalMeasure + " " + typeSelect.value;
     }
   }
 
-  // 3. Guardar en la base de datos
   if (!measureSections[section]) measureSections[section] = [];
   if (measureSections[section].includes(finalMeasure)) return showNotif('Esa medida ya existe.');
   
   measureSections[section].push(finalMeasure);
   if (medidasDocId) updateDoc(doc(db, 'medidas', medidasDocId), { sections: measureSections });
   
-  // 4. Refrescar la interfaz
-  renderMeasureManager(); 
-  setupMeasureControls('p'); 
-  setupMeasureControls('e');
-  
-  // 5. Limpiar los campos
+  renderMeasureManager(); setupMeasureControls('p'); setupMeasureControls('e');
   valInput.value = '';
   if (typeSelect) typeSelect.value = '';
 });
@@ -880,7 +934,7 @@ document.getElementById('btn-apply-admin-filters')?.addEventListener('click', ()
   bootstrap.Modal.getInstance(document.getElementById('adminFiltersModal'))?.hide();
 });
 
-// ─── EVENT LISTENERS ──────────────────────
+// ─── EVENT LISTENERS COMPLEMENTARIOS ──────
 document.getElementById('btn-open-categories')?.addEventListener('click', openCategoryManager);
 document.getElementById('btn-open-measures')?.addEventListener('click', openMeasureManager);
 document.getElementById('p-open-categories-btn')?.addEventListener('click', openCategoryManager);
@@ -902,7 +956,16 @@ document.addEventListener('click', e => {
   renderMeasureTags(prefix, target);
 });
 
-// ─── INIT ─────────────────────────────────
-refreshCategorySelects();
-setupMeasureControls('p');
-setupMeasureControls('e');
+// Inicializamos el formulario base en caso de tener valores en caché
+function refreshCategorySelects() {
+  document.querySelectorAll('.category-select').forEach(s => {
+    const cur = s.value;
+    s.innerHTML = dynamicCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+    if (dynamicCategories.includes(cur)) s.value = cur;
+  });
+  const adminCatFilter = document.getElementById('admin-filter-category');
+  if (adminCatFilter) {
+    adminCatFilter.innerHTML = '<option value="">Todas las categorías</option>' +
+      dynamicCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+}

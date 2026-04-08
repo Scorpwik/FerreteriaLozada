@@ -187,7 +187,47 @@ function renderCatalog() {
     return group.length === 1 ? renderSingleCard(group[0]) : renderGroupCard(group);
   }).join('');
 }
+// ─── ABRIR VISTA RÁPIDA DEL PRODUCTO ─────────────────────────────
+window.openProductModal = function(id, groupId = null) {
+  // Si viene de una carpeta de variantes, revisamos si el usuario cambió la medida
+  let activeId = id;
+  if (groupId && selectedVariantsMemory[groupId]) {
+    activeId = selectedVariantsMemory[groupId];
+  }
 
+  const p = catalogData.find(x => x.id === activeId);
+  if (!p) return;
+
+  // 1. Cargar imagen
+  const imgEl = document.getElementById('detail-img');
+  const imgSrc = getImage(p);
+  if (imgSrc) {
+    imgEl.src = imgSrc;
+    imgEl.style.display = 'block';
+  } else {
+    imgEl.style.display = 'none';
+  }
+
+  // 2. Cargar textos
+  document.getElementById('detail-category').textContent = p.category || 'Sin categoría';
+  document.getElementById('detail-name').textContent = p.name;
+  document.getElementById('detail-desc').textContent = p.desc || '';
+
+  // 3. Cargar la cápsula de la medida (si aplica)
+  let measureHTML = '';
+  if (p.measure) {
+    measureHTML = `<span class="measure-capsule" style="font-size: 0.85rem;">${p.measure}</span>`;
+  } else if (Array.isArray(p.measures) && p.measures.length > 0) {
+    measureHTML = `<span class="measure-capsule" style="font-size: 0.85rem;">${p.measures[0]}</span>`;
+  }
+  document.getElementById('detail-measures').innerHTML = measureHTML;
+
+  // 4. Inyectar la botonera de precios original
+  document.getElementById('detail-price-area').innerHTML = renderPriceArea(p);
+
+  // 5. Mostrar el modal
+  new bootstrap.Modal(document.getElementById('productDetailModal')).show();
+};
 // ─── TARJETA PRODUCTO ÚNICO ───────────────
 function renderSingleCard(p) {
   const img = getImage(p);
@@ -195,83 +235,25 @@ function renderSingleCard(p) {
     ? `<img src="${img}" alt="${p.name}" loading="lazy">`
     : `<i class="bi bi-tools placeholder-icon"></i>`;
 
-  // Preparamos la cápsula de la medida (si el producto tiene alguna)
-  let measureCapsuleHTML = '';
-  if (p.measure) {
-    measureCapsuleHTML = `<span class="measure-capsule" style="padding: 2px 10px; font-size: 0.7rem;">${p.measure}</span>`;
-  } else if (Array.isArray(p.measures) && p.measures.length > 0) {
-    measureCapsuleHTML = `<span class="measure-capsule" style="padding: 2px 10px; font-size: 0.7rem;">${p.measures[0]}</span>`;
-  }
+  const btnHTML = p.stock
+    ? `<button class="btn-add-cart" onclick="addToCart('${p.id}', '${p.measure || ''}')">
+         <i class="bi bi-cart-plus me-2"></i>Agregar al carrito
+       </button>`
+    : `<button class="btn-add-cart" disabled>Sin stock</button>`;
 
   return `
     <div class="col-sm-6 col-lg-4">
-      <div class="card product-card h-100">
+      <div class="card product-card h-100 shadow-sm" onclick="openProductModal('${p.id}')" style="cursor: pointer;">
         <div class="product-img-container">${imgHTML}</div>
         <div class="card-body d-flex flex-column p-3">
           <span class="product-badge mb-2 align-self-start">${p.category || '—'}</span>
-          
-          <div class="d-flex align-items-center flex-wrap gap-2 mb-2 mt-1">
-            <h6 class="fw-bold mb-0">${p.name}</h6>
-            ${measureCapsuleHTML}
-          </div>
-
+          ${renderMeasureCapsules(p)}
+          <h6 class="fw-bold mb-2 mt-1">${p.name}</h6>
           ${p.desc ? `<p class="text-muted small mb-2 flex-grow-1">${p.desc}</p>` : '<div class="flex-grow-1"></div>'}
           <div class="mt-auto">
-            ${renderPriceArea(p)}
-          </div>
-        </div>
-      </div>
-    </div>`;
-}
-
-// ─── TARJETA GRUPO DE VARIANTES (DESPLEGABLE) ───────────
-// ─── TARJETA GRUPO DE VARIANTES (DESPLEGABLE) ───────────
-function renderGroupCard(group) {
-  const base = group[0];
-  const safeGroupId = 'group-' + base.id; // ID único para el grupo
-  
-  // 1. Verificamos si hay una variante guardada en memoria tras actualizarse la BD
-  const savedVariantId = selectedVariantsMemory[safeGroupId];
-  let activeVariant = base; // Por defecto es la primera medida
-  
-  if (savedVariantId) {
-    const found = group.find(x => x.id === savedVariantId);
-    if (found) activeVariant = found;
-  }
-
-  const img  = getImage(activeVariant);
-  const imgHTML = img
-    ? `<img src="${img}" alt="${activeVariant.name}" loading="lazy">`
-    : `<i class="bi bi-tools placeholder-icon"></i>`;
-
-  // 2. Dibujamos las opciones, marcando como "selected" la activa
-  const options = group.map(p => {
-    const measure = (Array.isArray(p.measures) && p.measures.length > 0) ? p.measures.join(', ') : (p.measure || 'Sin medida');
-    const isSelected = (p.id === activeVariant.id) ? 'selected' : '';
-    return `<option value="${p.id}" ${isSelected}>${measure}</option>`;
-  }).join('');
-
-  return `
-    <div class="col-sm-6 col-lg-4">
-      <div class="card product-card h-100">
-        <div class="product-img-container">${imgHTML}</div>
-        <div class="card-body d-flex flex-column p-3">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="product-badge">${activeVariant.category || '—'}</span>
-            <span class="badge bg-secondary rounded-pill px-2 py-1" style="font-size:0.7rem; font-weight:600;">
-              ${group.length} medidas
-            </span>
-          </div>
-          <h6 class="fw-bold mb-1">${activeVariant.name}</h6>
-          ${activeVariant.desc ? `<p class="text-muted small mb-3">${activeVariant.desc}</p>` : '<div class="mb-2"></div>'}
-          
-          <div class="mt-auto bg-light p-2 rounded" style="border: 1px solid #e9ecef;">
-            <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-rulers me-1"></i>Elegir medida:</label>
-            <select class="form-select form-select-sm shadow-sm mb-2" style="font-weight: 500; border-color: #ced4da;" onchange="changeVariant(this.value, '${safeGroupId}')">
-              ${options}
-            </select>
-            <div id="variant-price-area-${safeGroupId}">
-              ${renderPriceArea(activeVariant)}
+            ${renderPricePills(p)}
+            <div class="mt-2" onclick="event.stopPropagation()">
+              ${btnHTML}
             </div>
           </div>
         </div>
@@ -279,7 +261,61 @@ function renderGroupCard(group) {
     </div>`;
 }
 
-// ─── CARRITO ──────────────────────────────
+// ─── TARJETA GRUPO DE VARIANTES ───────────
+function renderGroupCard(group) {
+  const base = group[0];
+  const img  = getImage(base);
+  const imgHTML = img
+    ? `<img src="${img}" alt="${base.name}" loading="lazy">`
+    : `<i class="bi bi-tools placeholder-icon"></i>`;
+
+  const variantRows = group.map(p => {
+    const measures = Array.isArray(p.measures) && p.measures.length > 0
+      ? p.measures : (p.measure ? [p.measure] : []);
+
+    const capsules = measures.length
+      ? measures.map(m => `<span class="measure-capsule">${m}</span>`).join('')
+      : '<span class="text-muted small">Sin medida</span>';
+
+    const addBtn = p.stock
+      ? `<button class="btn-cart-variant" onclick="addToCart('${p.id}', '${p.measure || ''}')">
+           <i class="bi bi-cart-plus"></i>
+         </button>`
+      : `<button class="btn-cart-variant" disabled title="Sin stock">
+           <i class="bi bi-x"></i>
+         </button>`;
+
+    return `
+      <div class="variant-catalog-row">
+        <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
+          <div class="measure-capsules-row mb-0">${capsules}</div>
+          ${addBtn}
+        </div>
+        ${renderPricePills(p)}
+      </div>`;
+  }).join('<div class="variant-divider"></div>');
+
+  return `
+    <div class="col-sm-6 col-lg-4">
+      <div class="card product-card h-100 shadow-sm" onclick="openProductModal('${base.id}')" style="cursor: pointer;">
+        <div class="product-img-container">${imgHTML}</div>
+        <div class="card-body d-flex flex-column p-3">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="product-badge">${base.category || '—'}</span>
+            <span class="variant-count-pill">${group.length} variantes</span>
+          </div>
+          <h6 class="fw-bold mb-2">${base.name}</h6>
+          ${base.desc ? `<p class="text-muted small mb-2">${base.desc}</p>` : ''}
+          
+          <div class="variants-catalog-list mt-auto" onclick="event.stopPropagation()">
+            ${variantRows}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+
 // ─── CARRITO ──────────────────────────────
 window.addToCart = function(id, measure, priceType = 'unit') {
   const p = catalogData.find(x => x.id === id);
