@@ -1,6 +1,5 @@
 // ════════════════════════════════════════════
-//  FERRETERÍA LOZADA — app.js  v2
-//  Catálogo con precios pill y cápsulas de medida
+//  FERRETERÍA LOZADA — app.js  v6 (Cantidades con + y -)
 // ════════════════════════════════════════════
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -30,7 +29,7 @@ let publicCategoryFilter = '';
 let publicStockFilter    = 'all';
 let publicPriceMin       = '';
 let publicPriceMax       = '';
-let selectedVariantsMemory = {}; // Guarda la variante que eligió el cliente
+let selectedVariantsMemory = {}; 
 const waNumber           = "593982965530";
 
 // ─── IMAGEN ───────────────────────────────
@@ -74,79 +73,166 @@ function refreshCategorySelects() {
   }
 }
 
-// ─── RENDER PRECIO PILL ───────────────────
-// Ambos precios con la misma tipografía y tamaño,
-// diferenciados solo por la leyenda "Unidad" / "Ciento"
-// ─── RENDER ÁREA DE PRECIOS Y BOTONES ─────────────
+// ─── AYUDANTES UI ─────────────────────────
+function renderMeasureCapsules(p) {
+  const measures = Array.isArray(p.measures) && p.measures.length > 0 
+    ? p.measures : (p.measure ? [p.measure] : []);
+  
+  if (measures.length === 0) return '<span class="text-muted small mb-2 d-block">Sin medida</span>';
+  return `<div class="d-flex flex-wrap gap-1 mb-2">` + 
+    measures.map(m => `<span class="badge bg-secondary">${m}</span>`).join('') + `</div>`;
+}
+
+// Genera la sección de Precios + Botones de Agregar + Cantidades
 function renderPriceArea(p) {
   const unit = p.price != null ? parseFloat(p.price) : null;
   const bulk = p.bulkPrice != null && p.bulkPrice > 0 ? parseFloat(p.bulkPrice) : null;
-
   if (unit === null) return '';
 
   const measureArg = p.measure ? p.measure.replace(/'/g, "\\'") : '';
   const btnDisabled = !p.stock ? 'disabled' : '';
   
   if (!bulk) {
-    // PRECIO ÚNICO: Sin texto "Unidad", tipografía bold y naranja
-    const btnText = !p.stock ? 'Sin stock' : '<i class="bi bi-cart-plus me-1"></i>Agregar';
+    // Diseño para productos con precio único
+    const btnText = !p.stock ? 'Agotado' : '<i class="bi bi-cart-plus me-1"></i>Agregar';
     return `
-      <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-        <span class="single-price-display">$${unit.toFixed(2)}</span>
-        <button class="btn btn-dark fw-bold btn-sm px-3" onclick="addToCart('${p.id}', '${measureArg}', 'unit')" ${btnDisabled}>
-          ${btnText}
-        </button>
+      <div class="mt-2 pt-2 border-top" onclick="event.stopPropagation()">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="text-muted fw-bold" style="font-size: 0.75rem; text-transform: uppercase;">Precio</span>
+          <span class="fw-bold text-success" style="font-size: 1.2rem;">$${unit.toFixed(2)}</span>
+        </div>
+        <div class="d-flex align-items-end gap-2">
+          <div class="d-flex flex-column">
+            <span class="text-muted mb-1" style="font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">Cantidad</span>
+            <div class="input-group input-group-sm" style="width: 90px; flex-wrap: nowrap;">
+              <button class="btn btn-outline-secondary px-2" type="button" onclick="this.nextElementSibling.stepDown()" ${btnDisabled}>-</button>
+              <input type="number" class="form-control text-center px-1 qty-input" value="1" min="1" style="border-color: #ddd;" ${btnDisabled}>
+              <button class="btn btn-outline-secondary px-2" type="button" onclick="this.previousElementSibling.stepUp()" ${btnDisabled}>+</button>
+            </div>
+          </div>
+          <button class="btn btn-dark fw-bold btn-sm flex-grow-1 shadow-sm" style="height: 31px;" onclick="addToCart('${p.id}', '${measureArg}', 'unit', this.parentElement.querySelector('.qty-input').value)" ${btnDisabled}>
+            ${btnText}
+          </button>
+        </div>
       </div>`;
   } else {
-    // TIENE PRECIO POR UNIDAD Y POR CIENTO
-    const btnTextUnit = !p.stock ? 'Sin stock' : '<i class="bi bi-cart-plus"></i> Unidad';
-    const btnTextBulk = !p.stock ? 'Sin stock' : '<i class="bi bi-cart-plus"></i> Ciento';
+    // Diseño para productos con precio por Unidad y Ciento
+    const btnTextUnit = !p.stock ? 'Agotado' : '<i class="bi bi-cart-plus"></i> Und.';
+    const btnTextBulk = !p.stock ? 'Agotado' : '<i class="bi bi-cart-plus"></i> Cto.';
     
     return `
-      <div class="d-flex flex-column gap-2 mt-2 pt-2 border-top">
-        <div class="d-flex justify-content-between align-items-center p-2 rounded bg-white" style="border: 1px solid #e0e0e0;">
-          <div>
-            <span class="d-block text-muted fw-bold" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Unidad</span>
-            <span class="fw-bold" style="color: var(--orange); font-size: 1.15rem; font-family: 'Poppins', sans-serif;">$${unit.toFixed(2)}</span>
+      <div class="d-flex flex-column gap-2 mt-2 pt-2 border-top" onclick="event.stopPropagation()">
+        <div class="p-2 rounded bg-white" style="border: 1px solid #e0e0e0;">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="d-block text-muted fw-bold" style="font-size: 0.65rem; text-transform: uppercase;">Unidad</span>
+            <span class="fw-bold text-success" style="font-size: 1.1rem;">$${unit.toFixed(2)}</span>
           </div>
-          <button class="btn btn-sm btn-dark fw-bold" onclick="addToCart('${p.id}', '${measureArg}', 'unit')" ${btnDisabled}>
-            ${btnTextUnit}
-          </button>
+          <div class="d-flex align-items-center gap-2">
+            <div class="input-group input-group-sm" style="width: 90px; flex-wrap: nowrap;">
+              <button class="btn btn-outline-secondary px-2" type="button" onclick="this.nextElementSibling.stepDown()" ${btnDisabled}>-</button>
+              <input type="number" class="form-control text-center px-1 qty-input" value="1" min="1" style="border-color: #ddd;" ${btnDisabled}>
+              <button class="btn btn-outline-secondary px-2" type="button" onclick="this.previousElementSibling.stepUp()" ${btnDisabled}>+</button>
+            </div>
+            <button class="btn btn-sm btn-dark fw-bold flex-grow-1 shadow-sm" onclick="addToCart('${p.id}', '${measureArg}', 'unit', this.parentElement.querySelector('.qty-input').value)" ${btnDisabled}>
+              ${btnTextUnit}
+            </button>
+          </div>
         </div>
-        <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: #fff4f0; border: 1px solid #ffd8c9;">
-          <div>
-            <span class="d-block text-muted fw-bold" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Ciento</span>
-            <span class="fw-bold" style="color: var(--orange); font-size: 1.15rem; font-family: 'Poppins', sans-serif;">$${bulk.toFixed(2)}</span>
+        
+        <div class="p-2 rounded" style="background: #fff4f0; border: 1px solid #ffd8c9;">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="d-block text-muted fw-bold" style="font-size: 0.65rem; text-transform: uppercase;">Ciento</span>
+            <span class="fw-bold text-danger" style="font-size: 1.1rem;">$${bulk.toFixed(2)}</span>
           </div>
-          <button class="btn btn-sm btn-outline-danger fw-bold" onclick="addToCart('${p.id}', '${measureArg}', 'bulk')" ${btnDisabled}>
-            ${btnTextBulk}
-          </button>
+          <div class="d-flex align-items-center gap-2">
+            <div class="input-group input-group-sm" style="width: 90px; flex-wrap: nowrap;">
+              <button class="btn btn-outline-secondary px-2" type="button" style="border-color: #ffd8c9; background: white;" onclick="this.nextElementSibling.stepDown()" ${btnDisabled}>-</button>
+              <input type="number" class="form-control text-center px-1 qty-input" value="1" min="1" style="border-color: #ffd8c9;" ${btnDisabled}>
+              <button class="btn btn-outline-secondary px-2" type="button" style="border-color: #ffd8c9; background: white;" onclick="this.previousElementSibling.stepUp()" ${btnDisabled}>+</button>
+            </div>
+            <button class="btn btn-sm btn-outline-danger bg-white fw-bold flex-grow-1 shadow-sm" onclick="addToCart('${p.id}', '${measureArg}', 'bulk', this.parentElement.querySelector('.qty-input').value)" ${btnDisabled}>
+              ${btnTextBulk}
+            </button>
+          </div>
         </div>
       </div>`;
   }
 }
 
-// Función global para actualizar el precio cuando se elige una medida diferente
-window.changeVariant = function(productId, groupId) {
-  // Guardamos en memoria qué medida seleccionó el usuario para este grupo
-  selectedVariantsMemory[groupId] = productId;
-  
-  const p = catalogData.find(x => x.id === productId);
-  if (!p) return;
-  const area = document.getElementById(`variant-price-area-${groupId}`);
-  if (area) {
-    area.innerHTML = renderPriceArea(p);
-  }
-};
+// ─── RENDER TARJETAS ──────────────────────
+function renderSingleCard(p) {
+  const img = getImage(p);
+  const imgHTML = img ? `<img src="${img}" alt="${p.name}" loading="lazy">` : `<i class="bi bi-tools placeholder-icon"></i>`;
 
-// ─── RENDER CÁPSULA DE MEDIDA ─────────────
-function renderMeasureCapsules(p) {
-  const measures = Array.isArray(p.measures) && p.measures.length > 0
-    ? p.measures
-    : (p.measure ? [p.measure] : []);
-  if (!measures.length) return '';
-  return `<div class="measure-capsules-row">${measures.map(m => `<span class="measure-capsule">${m}</span>`).join('')}</div>`;
+  return `
+    <div class="col-sm-6 col-lg-4">
+      <div class="card product-card h-100 shadow-sm" onclick="openProductModal('${p.id}')" style="cursor: pointer;">
+        <div class="product-img-container">${imgHTML}</div>
+        <div class="card-body d-flex flex-column p-3">
+          <span class="product-badge mb-2 align-self-start">${p.category || '—'}</span>
+          ${renderMeasureCapsules(p)}
+          <h6 class="fw-bold mb-2 mt-1">${p.name}</h6>
+          ${p.desc ? `<p class="text-muted small mb-2 flex-grow-1">${p.desc}</p>` : '<div class="flex-grow-1"></div>'}
+          
+          <div class="mt-auto">
+            ${renderPriceArea(p)}
+          </div>
+        </div>
+      </div>
+    </div>`;
 }
+
+function renderGroupCard(group) {
+  const base = group[0];
+  const img  = getImage(base);
+  const imgHTML = img ? `<img src="${img}" alt="${base.name}" loading="lazy">` : `<i class="bi bi-tools placeholder-icon"></i>`;
+
+  // Determinamos qué variante está activa (la primera o la que el cliente ya seleccionó)
+  const activeVariantId = selectedVariantsMemory[base.id] || base.id;
+  const activeVariant = group.find(x => x.id === activeVariantId) || base;
+
+  // Creamos el selector de medidas desplegable
+  const options = group.map(p => {
+    const label = p.measure || (p.measures && p.measures[0]) || 'Sin medida';
+    const isSelected = p.id === activeVariant.id ? 'selected' : '';
+    return `<option value="${p.id}" ${isSelected}>${label}</option>`;
+  }).join('');
+
+  return `
+    <div class="col-sm-6 col-lg-4">
+      <div class="card product-card h-100 shadow-sm" onclick="openProductModal('${base.id}')" style="cursor: pointer;">
+        <div class="product-img-container">${imgHTML}</div>
+        <div class="card-body d-flex flex-column p-3">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="product-badge">${base.category || '—'}</span>
+          </div>
+          <h6 class="fw-bold mb-2 mt-1">${base.name}</h6>
+          ${base.desc ? `<p class="text-muted small mb-2 flex-grow-1">${base.desc}</p>` : '<div class="flex-grow-1"></div>'}
+          
+          <div class="mt-auto" onclick="event.stopPropagation()">
+            <label class="small text-muted mb-1 fw-bold"><i class="bi bi-rulers me-1"></i>Medida:</label>
+            <select class="form-select form-select-sm mb-2" style="border-color: #ddd;" onchange="changeCardVariant('${base.id}', this.value)">
+              ${options}
+            </select>
+            <div id="card-price-area-${base.id}">
+              ${renderPriceArea(activeVariant)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── ACTUALIZACIÓN EN TIEMPO REAL (TARJETA) ───
+window.changeCardVariant = function(baseId, variantId) {
+  selectedVariantsMemory[baseId] = variantId; // Guardamos en memoria
+  const v = catalogData.find(x => x.id === variantId);
+  if (!v) return;
+  
+  // Actualizamos solo la zona de precio de la tarjeta
+  const area = document.getElementById(`card-price-area-${baseId}`);
+  if (area) area.innerHTML = renderPriceArea(v);
+};
 
 // ─── RENDER CATÁLOGO ──────────────────────
 function renderCatalog() {
@@ -174,7 +260,7 @@ function renderCatalog() {
     return;
   }
 
-  // Agrupar por nombre (variantes)
+  // Agrupamos variantes bajo el mismo nombre
   const groups = {};
   const order  = [];
   filtered.forEach(p => {
@@ -187,163 +273,103 @@ function renderCatalog() {
     return group.length === 1 ? renderSingleCard(group[0]) : renderGroupCard(group);
   }).join('');
 }
-// ─── ABRIR VISTA RÁPIDA DEL PRODUCTO ─────────────────────────────
-window.openProductModal = function(id, groupId = null) {
-  // Si viene de una carpeta de variantes, revisamos si el usuario cambió la medida
-  let activeId = id;
-  if (groupId && selectedVariantsMemory[groupId]) {
-    activeId = selectedVariantsMemory[groupId];
-  }
 
-  const p = catalogData.find(x => x.id === activeId);
-  if (!p) return;
-
-  // 1. Cargar imagen
-  const imgEl = document.getElementById('detail-img');
-  const imgSrc = getImage(p);
-  if (imgSrc) {
-    imgEl.src = imgSrc;
-    imgEl.style.display = 'block';
-  } else {
-    imgEl.style.display = 'none';
-  }
-
-  // 2. Cargar textos
-  document.getElementById('detail-category').textContent = p.category || 'Sin categoría';
-  document.getElementById('detail-name').textContent = p.name;
-  document.getElementById('detail-desc').textContent = p.desc || '';
-
-  // 3. Cargar la cápsula de la medida (si aplica)
-  let measureHTML = '';
-  if (p.measure) {
-    measureHTML = `<span class="measure-capsule" style="font-size: 0.85rem;">${p.measure}</span>`;
-  } else if (Array.isArray(p.measures) && p.measures.length > 0) {
-    measureHTML = `<span class="measure-capsule" style="font-size: 0.85rem;">${p.measures[0]}</span>`;
-  }
-  document.getElementById('detail-measures').innerHTML = measureHTML;
-
-  // 4. Inyectar la botonera de precios original
-  document.getElementById('detail-price-area').innerHTML = renderPriceArea(p);
-
-  // 5. Mostrar el modal
-  new bootstrap.Modal(document.getElementById('productDetailModal')).show();
-};
-// ─── TARJETA PRODUCTO ÚNICO ───────────────
-function renderSingleCard(p) {
-  const img = getImage(p);
-  const imgHTML = img
-    ? `<img src="${img}" alt="${p.name}" loading="lazy">`
-    : `<i class="bi bi-tools placeholder-icon"></i>`;
-
-  const btnHTML = p.stock
-    ? `<button class="btn-add-cart" onclick="addToCart('${p.id}', '${p.measure || ''}')">
-         <i class="bi bi-cart-plus me-2"></i>Agregar al carrito
-       </button>`
-    : `<button class="btn-add-cart" disabled>Sin stock</button>`;
-
-  return `
-    <div class="col-sm-6 col-lg-4">
-      <div class="card product-card h-100 shadow-sm" onclick="openProductModal('${p.id}')" style="cursor: pointer;">
-        <div class="product-img-container">${imgHTML}</div>
-        <div class="card-body d-flex flex-column p-3">
-          <span class="product-badge mb-2 align-self-start">${p.category || '—'}</span>
-          ${renderMeasureCapsules(p)}
-          <h6 class="fw-bold mb-2 mt-1">${p.name}</h6>
-          ${p.desc ? `<p class="text-muted small mb-2 flex-grow-1">${p.desc}</p>` : '<div class="flex-grow-1"></div>'}
-          <div class="mt-auto">
-            ${renderPricePills(p)}
-            <div class="mt-2" onclick="event.stopPropagation()">
-              ${btnHTML}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-}
-
-// ─── TARJETA GRUPO DE VARIANTES ───────────
-function renderGroupCard(group) {
-  const base = group[0];
-  const img  = getImage(base);
-  const imgHTML = img
-    ? `<img src="${img}" alt="${base.name}" loading="lazy">`
-    : `<i class="bi bi-tools placeholder-icon"></i>`;
-
-  const variantRows = group.map(p => {
-    const measures = Array.isArray(p.measures) && p.measures.length > 0
-      ? p.measures : (p.measure ? [p.measure] : []);
-
-    const capsules = measures.length
-      ? measures.map(m => `<span class="measure-capsule">${m}</span>`).join('')
-      : '<span class="text-muted small">Sin medida</span>';
-
-    const addBtn = p.stock
-      ? `<button class="btn-cart-variant" onclick="addToCart('${p.id}', '${p.measure || ''}')">
-           <i class="bi bi-cart-plus"></i>
-         </button>`
-      : `<button class="btn-cart-variant" disabled title="Sin stock">
-           <i class="bi bi-x"></i>
-         </button>`;
-
-    return `
-      <div class="variant-catalog-row">
-        <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
-          <div class="measure-capsules-row mb-0">${capsules}</div>
-          ${addBtn}
-        </div>
-        ${renderPricePills(p)}
-      </div>`;
-  }).join('<div class="variant-divider"></div>');
-
-  return `
-    <div class="col-sm-6 col-lg-4">
-      <div class="card product-card h-100 shadow-sm" onclick="openProductModal('${base.id}')" style="cursor: pointer;">
-        <div class="product-img-container">${imgHTML}</div>
-        <div class="card-body d-flex flex-column p-3">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="product-badge">${base.category || '—'}</span>
-            <span class="variant-count-pill">${group.length} variantes</span>
-          </div>
-          <h6 class="fw-bold mb-2">${base.name}</h6>
-          ${base.desc ? `<p class="text-muted small mb-2">${base.desc}</p>` : ''}
-          
-          <div class="variants-catalog-list mt-auto" onclick="event.stopPropagation()">
-            ${variantRows}
-          </div>
-        </div>
-      </div>
-    </div>`;
-}
-
-
-// ─── CARRITO ──────────────────────────────
-window.addToCart = function(id, measure, priceType = 'unit') {
+// ─── MODAL VISTA RÁPIDA ───────────────────
+window.openProductModal = function(id) {
   const p = catalogData.find(x => x.id === id);
   if (!p) return;
+
+  const group = catalogData.filter(x => x.name === p.name);
+  const baseId = group[0].id; // Identificador del grupo
+  
+  // Revisamos si ya había elegido una medida en la tarjeta
+  let activeProduct = p;
+  if (group.length > 1 && selectedVariantsMemory[baseId]) {
+    activeProduct = catalogData.find(x => x.id === selectedVariantsMemory[baseId]) || p;
+  }
+
+  // Cargar info en el Modal
+  const imgEl = document.getElementById('detail-img');
+  const imgSrc = getImage(activeProduct);
+  if (imgSrc) { imgEl.src = imgSrc; imgEl.style.display = 'block'; } 
+  else { imgEl.style.display = 'none'; }
+
+  document.getElementById('detail-category').textContent = activeProduct.category || 'Sin categoría';
+  document.getElementById('detail-name').textContent = activeProduct.name;
+  document.getElementById('detail-desc').textContent = activeProduct.desc || '';
+
+  // Selector de Medidas del Modal
+  const measuresContainer = document.getElementById('detail-measures');
+  if (group.length > 1) {
+    const options = group.map(v => {
+      const label = v.measure || (v.measures && v.measures[0]) || 'Sin medida';
+      const isSelected = v.id === activeProduct.id ? 'selected' : '';
+      return `<option value="${v.id}" ${isSelected}>${label}</option>`;
+    }).join('');
+    
+    measuresContainer.innerHTML = `
+      <label class="small text-muted mb-1 fw-bold">Seleccione la medida:</label>
+      <select class="form-select form-select-sm mb-3" style="border-color: var(--orange);" onchange="updateModalVariant(this.value, '${baseId}')">
+        ${options}
+      </select>
+    `;
+  } else {
+    measuresContainer.innerHTML = renderMeasureCapsules(activeProduct);
+  }
+
+  // Área de Precio del Modal
+  document.getElementById('detail-price-area').innerHTML = renderPriceArea(activeProduct);
+
+  new bootstrap.Modal(document.getElementById('productDetailModal')).show();
+};
+
+window.updateModalVariant = function(newId, baseId) {
+  selectedVariantsMemory[baseId] = newId;
+  const v = catalogData.find(x => x.id === newId);
+  if (!v) return;
+
+  const imgEl = document.getElementById('detail-img');
+  const imgSrc = getImage(v);
+  if (imgSrc) { imgEl.src = imgSrc; imgEl.style.display = 'block'; } 
+  else { imgEl.style.display = 'none'; }
+
+  document.getElementById('detail-price-area').innerHTML = renderPriceArea(v);
+  
+  // Sincronizar también la tarjeta que está detrás del modal para que coincidan
+  const cardArea = document.getElementById(`card-price-area-${baseId}`);
+  if (cardArea) {
+    cardArea.innerHTML = renderPriceArea(v);
+    const cardSelect = cardArea.previousElementSibling;
+    if (cardSelect && cardSelect.tagName === 'SELECT') cardSelect.value = newId;
+  }
+};
+
+// ─── CARRITO ──────────────────────────────
+window.addToCart = function(id, measure, priceType = 'unit', qtyStr = "1") {
+  const p = catalogData.find(x => x.id === id);
+  if (!p) return;
+  
+  // Convertimos lo que escribió el usuario a un número
+  const qtyToAdd = parseInt(qtyStr, 10);
+  if (isNaN(qtyToAdd) || qtyToAdd < 1) return; // Si escribió letras o cero, no hace nada
   
   const isBulk = priceType === 'bulk';
   const cartPrice = isBulk ? parseFloat(p.bulkPrice) : parseFloat(p.price);
   const cartLabel = isBulk ? ' (Ciento)' : '';
-  
-  // Ahora la llave del carrito considera si es unidad o ciento
   const cartKey = measure ? `${id}-${measure}-${priceType}` : `${id}-${priceType}`;
   
   const ex = cart.find(x => x.cartKey === cartKey);
   if (ex) {
-    ex.quantity++;
+    ex.quantity += qtyToAdd; // Suma la cantidad elegida a lo que ya hay en el carrito
   } else {
     cart.push({ 
-      ...p, 
-      price: cartPrice, // Guardamos el precio correcto (unidad o bulk)
-      cartName: p.name + cartLabel, // Le añadimos "(Ciento)" al nombre si aplica
-      quantity: 1, 
-      cartKey, 
-      selectedMeasure: measure 
+      ...p, price: cartPrice, cartName: p.name + cartLabel, 
+      quantity: qtyToAdd, cartKey, selectedMeasure: measure 
     });
   }
   updateCartUI();
 
-  // Animación del carrito flotante para dar feedback visual
+  // Animación del carrito flotante
   const floatingCart = document.getElementById('floating-cart');
   if (floatingCart) {
     floatingCart.style.transform = 'scale(1.2)';
@@ -381,9 +407,7 @@ function updateCartUI() {
 
   container.innerHTML = cart.map((item, idx) => {
     const img = getImage(item);
-    const imgEl = img
-      ? `<img src="${img}" class="cart-item-img" alt="${item.name}">`
-      : `<div class="cart-item-icon-placeholder"><i class="bi bi-box"></i></div>`;
+    const imgEl = img ? `<img src="${img}" class="cart-item-img" alt="${item.name}">` : `<div class="cart-item-icon-placeholder"><i class="bi bi-box"></i></div>`;
     return `
       <li class="d-flex align-items-center gap-3 mb-3 p-2 bg-white rounded-3 shadow-sm">
         ${imgEl}
@@ -400,14 +424,12 @@ function updateCartUI() {
         </div>
         <div class="text-end flex-shrink-0">
           <div class="fw-bold" style="color:var(--orange);font-size:.95rem;">$${(item.price * item.quantity).toFixed(2)}</div>
-          <button class="btn btn-sm text-danger p-0 mt-1" onclick="changeQty(${idx}, -9999)">
-            <i class="bi bi-trash"></i>
-          </button>
+          <button class="btn btn-sm text-danger p-0 mt-1" onclick="changeQty(${idx}, -9999)"><i class="bi bi-trash"></i></button>
         </div>
       </li>`;
   }).join('');
 
-  const total   = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+  const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   const totalEl = document.getElementById('cart-total');
   if (totalEl) totalEl.innerText = `$${total.toFixed(2)}`;
 
@@ -457,16 +479,11 @@ window.applyFilters = function() {
 window.clearFilters = function() {
   publicSearchQuery = ''; publicCategoryFilter = '';
   publicStockFilter = 'all'; publicPriceMin = ''; publicPriceMax = '';
-  const searchEl = document.getElementById('public-search');
-  const stockAll = document.querySelector('input[name="public-stock-filter"][value="all"]');
-  const catEl    = document.getElementById('filter-category');
-  const minEl    = document.getElementById('price-min');
-  const maxEl    = document.getElementById('price-max');
-  if (searchEl) searchEl.value = '';
-  if (stockAll) stockAll.checked = true;
-  if (catEl)    catEl.value     = '';
-  if (minEl)    minEl.value     = '';
-  if (maxEl)    maxEl.value     = '';
+  document.getElementById('public-search').value = '';
+  document.querySelector('input[name="public-stock-filter"][value="all"]').checked = true;
+  document.getElementById('filter-category').value = '';
+  document.getElementById('price-min').value = '';
+  document.getElementById('price-max').value = '';
   refreshCategoryFilters();
   renderCatalog();
 };
