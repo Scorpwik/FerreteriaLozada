@@ -11,9 +11,7 @@
       --warning: #ffc107;
       --success: #28a745;
     }
-
     * { box-sizing: border-box; }
-
     body {
       font-family: 'Inter', sans-serif;
       background-color: var(--light-gray);
@@ -21,19 +19,16 @@
       overflow-x: hidden;
       scroll-behavior: smooth;
     }
-
     h1, h2, h3, h4, h5, h6, .navbar-brand, .fw-bold {
       font-family: 'Poppins', sans-serif;
     }
-
-    /* ─── CURSOR ─── */
+    /* CURSOR */
     button, a, .btn, .navbar-brand, .nav-link, .filter-btn,
     .badge[onclick], [onclick], input[type="button"], input[type="submit"],
     .cursor-pointer, select, label[for], .offcanvas-title {
       cursor: pointer !important;
     }
-
-    /* ─── NAVBAR ─── */
+    /* NAVBAR */
     .navbar {
       background-color: var(--black) !important;
       padding: 0.75rem 0;
@@ -67,8 +62,7 @@
     .nav-link { color: rgba(255,255,255,0.75) !important; transition: color 0.2s; font-size: 0.9rem; }
     .nav-link:hover { color: var(--orange) !important; }
     #btn-logout { color: #ff6b6b !important; }
-
-    /* ─── VIEW TRANSITIONS ─── */
+    /* VIEW TRANSITIONS */
     .view-section {
       opacity: 0;
       transform: translateY(16px);
@@ -80,8 +74,7 @@
       transform: translateY(0);
       display: block;
     }
-
-    /* ─── HERO ─── */
+    /* HERO */
     .hero {
       background: linear-gradient(135deg, var(--black) 0%, #1c1c1c 45%, #2a1200 100%);
       background-size: 300% 300%;
@@ -124,8 +117,7 @@
       0%, 100% { transform: translateY(-50%) scale(1); }
       50% { transform: translateY(-50%) scale(1.15); }
     }
-
-    /* ─── STATS BAR ─── */
+    /* STATS BAR */
     .stats-bar {
       background: var(--dark);
       border-bottom: 1px solid rgba(255,255,255,0.07);
@@ -138,8 +130,7 @@
     .stat-item:last-child { border-right: none; }
     .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--orange); font-family: 'Poppins', sans-serif; }
     .stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* ─── NOSOTROS ─── */
+    /* NOSOTROS */
     .nosotros-card {
       background: white;
       border-radius: 16px;
@@ -147,8 +138,7 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.06);
       padding: 2.5rem;
     }
-
-    /* ─── PASOS ─── */
+    /* PASOS */
     .step-card {
       background: white;
       border-radius: 14px;
@@ -163,8 +153,7 @@
     .step-card.green { border-top-color: var(--success); }
     .step-card.blue { border-top-color: #0d6efd; }
     .step-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-
-    /* ─── FILTROS CATÁLOGO ─── */
+    /* FILTROS CATÁLOGO */
     .filter-btn {
       border-radius: 20px;
       padding: 0.35rem 1.1rem;
@@ -180,8 +169,7 @@
       color: white;
       border-color: var(--dark);
     }
-
-    /* ─── PRODUCT CARDS ─── */
+    /* PRODUCT CARDS */
     .product-card {
       background: white;
       border-radius: 14px;
@@ -227,8 +215,7 @@
     .btn-add-cart:hover { background: var(--orange); color: white; }
     .btn-add-cart.added { background: var(--success); color: white; }
     .btn-add-cart:disabled { background: #ccc; color: #888; cursor: not-allowed !important; }
-
-    /* ─── LOADING SPINNER ─── */
+    /* LOADING SPINNER */
     .upload-spinner {
       display: none;
       width: 16px; height: 16px;
@@ -239,8 +226,7 @@
       margin-left: 8px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ─── FLOATING CART ─── */
+    /* FLOATING CART */
     .floating-cart-btn {
       position: fixed;
       bottom: 28px;
@@ -260,8 +246,7 @@
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .floating-cart-btn:hover { transform: scale(1.08); box-shadow: 0 12px 30px rgba(245,69,0,0.5); }
-
-    /* ─── OFFCANVAS CARRITO ─── */
+    /* OFFCANVAS CARRITO */
     .offcanvas-header { background: var(--dark); }
     .cart-item-img {
       width: 52px; height: 52px;
@@ -309,8 +294,7 @@
       transition: background 0.2s;
     }
     .btn-whatsapp-send:hover { background: #1db954; color: white; }
-
-    /* ─── ADMIN TABLE ─── */
+    /* ADMIN TABLE */
     .admin-table thead th {
       background: var(--dark);
       color: rgba(255,255,255,0.85);
@@ -350,8 +334,7 @@
     .stock-btn.in-stock:hover { background: #a7f3d0; }
     .stock-btn.out-stock { background: #fee2e2; color: #991b1b; }
     .stock-btn.out-stock:hover { background: #fecaca; }
-
-    /* ─── MODALES ─── */
+    /* MODALES */
     .modal-content {
       border: none;
       border-radius: 16px;
@@ -391,11 +374,9 @@
       width: 0%;
       transition: width 0.3s;
     }
-
-    /* ─── FOOTER ─── */
+    /* FOOTER */
     footer { background: var(--black); border-top: 1px solid rgba(255,255,255,0.06); }
-
-    /* ─── RESPONSIVE ─── */
+    /* RESPONSIVE */
     @media (max-width: 768px) {
       .hero { padding: 60px 0; }
       .hero-icon-bg { display: none; }
@@ -421,7 +402,6 @@
       border-color: #28a745;
       background: #f0fff4;
     }
-    /* Gestión de categorías */
     .cat-manager-item {
       display: flex;
       align-items: center;
@@ -459,8 +439,7 @@
       padding: 2px 7px;
       font-size: 0.78rem;
     }
-
-    /* ─── ESTILOS DE INTERFAZ ─── */
+    /* ESTILOS DE INTERFAZ */
     .hero-subtitle { font-size: 1.3rem; font-weight: 500; opacity: 0.9; }
     .hero-icon-wrap,
     .location-icon-wrap {
@@ -642,8 +621,7 @@
       padding: 0;
       margin-top: 0.25rem;
     }
-
-    /* ─── ERROR MODAL ─── */
+    /* ERROR MODAL */
     .error-modal-header {
       background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
       border-bottom: 1px solid rgba(245,69,0,0.1);
@@ -664,14 +642,13 @@
       background: rgba(245,69,0,0.02);
       padding: 1rem 1.5rem;
     }
-/* ─── CÁPSULAS DE MEDIDA ─── */
+/* CÁPSULAS DE MEDIDA */
 .measure-capsules-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 10px;
 }
-
 .measure-capsule {
   display: inline-block;
   background-color: var(--dark, #1a1a1a);
@@ -683,8 +660,7 @@
   letter-spacing: 0.5px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
-
-/* ─── PRECIO ÚNICO (SIN VARIANTES) ─── */
+/* PRECIO ÚNICO (SIN VARIANTES) */
 .single-price-display {
   color: var(--orange, #f54500);
   font-size: 1.4rem;
@@ -692,26 +668,23 @@
   font-family: 'Poppins', sans-serif;
   line-height: 1;
 }
-/* ─── AJUSTE DE IMÁGENES EN CATÁLOGO ─── */
+/* AJUSTE DE IMÁGENES EN CATÁLOGO */
 .product-img-container {
-  height: 200px; /* Mantiene el tamaño uniforme de las tarjetas */
+  height: 200px; 
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ffffff; /* Fondo blanco por si la imagen es transparente */
-  cursor: pointer; /* Cambia el cursor a una manito para invitar a hacer clic */
+  background-color: #ffffff; 
+  cursor: pointer; 
   overflow: hidden;
 }
-
 .product-img-container img {
   width: 100%;
   height: 100%;
-  object-fit: contain !important; /* ¡Esta es la magia que evita que se corte! */
+  object-fit: contain !important; 
   transition: transform 0.3s ease;
 }
-
-/* Efecto de zoom suave al pasar el mouse por la imagen */
 .product-img-container:hover img {
   transform: scale(1.08);
 }

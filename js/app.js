@@ -1,6 +1,6 @@
-// ════════════════════════════════════════════
-//  FERRETERÍA LOZADA — app.js  v6 (Cantidades con + y -)
-// ════════════════════════════════════════════
+// 
+// FERRETERÍA LOZADA — app.js  v6 (Cantidades con + y -)
+// 
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -20,7 +20,7 @@ const app          = initializeApp(firebaseConfig);
 const db           = getFirestore(app);
 const productosRef = collection(db, "productos");
 
-// ─── ESTADO ───────────────────────────────
+// ESTADO
 let catalogData          = [];
 let cart                 = [];
 let dynamicCategories    = [];
@@ -32,10 +32,10 @@ let publicPriceMax       = '';
 let selectedVariantsMemory = {}; 
 const waNumber           = "593982965530";
 
-// ─── IMAGEN ───────────────────────────────
-function getImage(p) { return p.imageB64 || p.image || ''; }
+// IMAGEN
+function getImage(p) { return p.imageB64 || p.image || p.imageUrl || ''; }
 
-// ─── FIRESTORE: PRODUCTOS ─────────────────
+// FIRESTORE: PRODUCTOS
 onSnapshot(productosRef, snapshot => {
   catalogData       = [];
   dynamicCategories = [];
@@ -55,7 +55,7 @@ onSnapshot(productosRef, snapshot => {
   if (loading) loading.innerHTML = '<p class="text-danger mt-3">Error al conectar con Firestore.</p>';
 });
 
-// ─── FILTROS DE CATEGORÍA ─────────────────
+// FILTROS DE CATEGORÍA
 function refreshCategoryFilters() {
   const filterBox = document.getElementById('category-filters');
   if (!filterBox) return;
@@ -73,7 +73,7 @@ function refreshCategorySelects() {
   }
 }
 
-// ─── AYUDANTES UI ─────────────────────────
+// AYUDANTES UI
 function renderMeasureCapsules(p) {
   const measures = Array.isArray(p.measures) && p.measures.length > 0 
     ? p.measures : (p.measure ? [p.measure] : []);
@@ -83,7 +83,6 @@ function renderMeasureCapsules(p) {
     measures.map(m => `<span class="badge bg-secondary">${m}</span>`).join('') + `</div>`;
 }
 
-// Genera la sección de Precios + Botones de Agregar + Cantidades
 function renderPriceArea(p) {
   const unit = p.price != null ? parseFloat(p.price) : null;
   const bulk = p.bulkPrice != null && p.bulkPrice > 0 ? parseFloat(p.bulkPrice) : null;
@@ -93,7 +92,6 @@ function renderPriceArea(p) {
   const btnDisabled = !p.stock ? 'disabled' : '';
   
   if (!bulk) {
-    // Diseño para productos con precio único
     const btnText = !p.stock ? 'Agotado' : '<i class="bi bi-cart-plus me-1"></i>Agregar';
     return `
       <div class="mt-2 pt-2 border-top" onclick="event.stopPropagation()">
@@ -116,7 +114,6 @@ function renderPriceArea(p) {
         </div>
       </div>`;
   } else {
-    // Diseño para productos con precio por Unidad y Ciento
     const btnTextUnit = !p.stock ? 'Agotado' : '<i class="bi bi-cart-plus"></i> Und.';
     const btnTextBulk = !p.stock ? 'Agotado' : '<i class="bi bi-cart-plus"></i> Cto.';
     
@@ -159,7 +156,7 @@ function renderPriceArea(p) {
   }
 }
 
-// ─── RENDER TARJETAS ──────────────────────
+// RENDER TARJETAS
 function renderSingleCard(p) {
   const img = getImage(p);
   const imgHTML = img ? `<img src="${img}" alt="${p.name}" loading="lazy">` : `<i class="bi bi-tools placeholder-icon"></i>`;
@@ -187,11 +184,9 @@ function renderGroupCard(group) {
   const img  = getImage(base);
   const imgHTML = img ? `<img src="${img}" alt="${base.name}" loading="lazy">` : `<i class="bi bi-tools placeholder-icon"></i>`;
 
-  // Determinamos qué variante está activa (la primera o la que el cliente ya seleccionó)
   const activeVariantId = selectedVariantsMemory[base.id] || base.id;
   const activeVariant = group.find(x => x.id === activeVariantId) || base;
 
-  // Creamos el selector de medidas desplegable
   const options = group.map(p => {
     const label = p.measure || (p.measures && p.measures[0]) || 'Sin medida';
     const isSelected = p.id === activeVariant.id ? 'selected' : '';
@@ -223,18 +218,17 @@ function renderGroupCard(group) {
     </div>`;
 }
 
-// ─── ACTUALIZACIÓN EN TIEMPO REAL (TARJETA) ───
+// ACTUALIZACIÓN EN TIEMPO REAL (TARJETA)
 window.changeCardVariant = function(baseId, variantId) {
-  selectedVariantsMemory[baseId] = variantId; // Guardamos en memoria
+  selectedVariantsMemory[baseId] = variantId;
   const v = catalogData.find(x => x.id === variantId);
   if (!v) return;
   
-  // Actualizamos solo la zona de precio de la tarjeta
   const area = document.getElementById(`card-price-area-${baseId}`);
   if (area) area.innerHTML = renderPriceArea(v);
 };
 
-// ─── RENDER CATÁLOGO ──────────────────────
+// RENDER CATÁLOGO
 function renderCatalog() {
   const grid = document.getElementById('catalog-grid');
   if (!grid) return;
@@ -260,7 +254,6 @@ function renderCatalog() {
     return;
   }
 
-  // Agrupamos variantes bajo el mismo nombre
   const groups = {};
   const order  = [];
   filtered.forEach(p => {
@@ -274,21 +267,19 @@ function renderCatalog() {
   }).join('');
 }
 
-// ─── MODAL VISTA RÁPIDA ───────────────────
+// MODAL VISTA RÁPIDA
 window.openProductModal = function(id) {
   const p = catalogData.find(x => x.id === id);
   if (!p) return;
 
   const group = catalogData.filter(x => x.name === p.name);
-  const baseId = group[0].id; // Identificador del grupo
+  const baseId = group[0].id;
   
-  // Revisamos si ya había elegido una medida en la tarjeta
   let activeProduct = p;
   if (group.length > 1 && selectedVariantsMemory[baseId]) {
     activeProduct = catalogData.find(x => x.id === selectedVariantsMemory[baseId]) || p;
   }
 
-  // Cargar info en el Modal
   const imgEl = document.getElementById('detail-img');
   const imgSrc = getImage(activeProduct);
   if (imgSrc) { imgEl.src = imgSrc; imgEl.style.display = 'block'; } 
@@ -298,7 +289,6 @@ window.openProductModal = function(id) {
   document.getElementById('detail-name').textContent = activeProduct.name;
   document.getElementById('detail-desc').textContent = activeProduct.desc || '';
 
-  // Selector de Medidas del Modal
   const measuresContainer = document.getElementById('detail-measures');
   if (group.length > 1) {
     const options = group.map(v => {
@@ -317,7 +307,6 @@ window.openProductModal = function(id) {
     measuresContainer.innerHTML = renderMeasureCapsules(activeProduct);
   }
 
-  // Área de Precio del Modal
   document.getElementById('detail-price-area').innerHTML = renderPriceArea(activeProduct);
 
   new bootstrap.Modal(document.getElementById('productDetailModal')).show();
@@ -335,7 +324,6 @@ window.updateModalVariant = function(newId, baseId) {
 
   document.getElementById('detail-price-area').innerHTML = renderPriceArea(v);
   
-  // Sincronizar también la tarjeta que está detrás del modal para que coincidan
   const cardArea = document.getElementById(`card-price-area-${baseId}`);
   if (cardArea) {
     cardArea.innerHTML = renderPriceArea(v);
@@ -344,14 +332,13 @@ window.updateModalVariant = function(newId, baseId) {
   }
 };
 
-// ─── CARRITO ──────────────────────────────
+// CARRITO
 window.addToCart = function(id, measure, priceType = 'unit', qtyStr = "1") {
   const p = catalogData.find(x => x.id === id);
   if (!p) return;
   
-  // Convertimos lo que escribió el usuario a un número
   const qtyToAdd = parseInt(qtyStr, 10);
-  if (isNaN(qtyToAdd) || qtyToAdd < 1) return; // Si escribió letras o cero, no hace nada
+  if (isNaN(qtyToAdd) || qtyToAdd < 1) return;
   
   const isBulk = priceType === 'bulk';
   const cartPrice = isBulk ? parseFloat(p.bulkPrice) : parseFloat(p.price);
@@ -360,7 +347,7 @@ window.addToCart = function(id, measure, priceType = 'unit', qtyStr = "1") {
   
   const ex = cart.find(x => x.cartKey === cartKey);
   if (ex) {
-    ex.quantity += qtyToAdd; // Suma la cantidad elegida a lo que ya hay en el carrito
+    ex.quantity += qtyToAdd;
   } else {
     cart.push({ 
       ...p, price: cartPrice, cartName: p.name + cartLabel, 
@@ -369,7 +356,6 @@ window.addToCart = function(id, measure, priceType = 'unit', qtyStr = "1") {
   }
   updateCartUI();
 
-  // Animación del carrito flotante
   const floatingCart = document.getElementById('floating-cart');
   if (floatingCart) {
     floatingCart.style.transform = 'scale(1.2)';
@@ -437,7 +423,7 @@ function updateCartUI() {
   if (sendBtn) sendBtn.disabled = false;
 }
 
-// ─── WHATSAPP ─────────────────────────────
+// WHATSAPP
 function sendWhatsApp() {
   if (!cart.length) return;
   let msg = "¡Hola Vecino! 👋 Cotización de Ferretería Lozada:\n\n";
@@ -453,7 +439,7 @@ function sendWhatsApp() {
 document.getElementById('btn-whatsapp')?.addEventListener('click', sendWhatsApp);
 document.getElementById('btn-send-quote')?.addEventListener('click', sendWhatsApp);
 
-// ─── FILTROS CATÁLOGO ─────────────────────
+// FILTROS CATÁLOGO
 document.getElementById('category-filters')?.addEventListener('click', e => {
   const btn = e.target.closest('button[data-filter]');
   if (!btn) return;
@@ -488,5 +474,5 @@ window.clearFilters = function() {
   renderCatalog();
 };
 
-// ─── INIT ─────────────────────────────────
+// INIT
 updateCartUI();

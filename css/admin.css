@@ -1,12 +1,6 @@
-/* ════════════════════════════════════════
-   FERRETERÍA LOZADA — admin.css  v2
-   Estilos del panel admin + extras de catálogo
-   ════════════════════════════════════════ */
-
-/* ─── BODY ADMIN ─── */
+/* BODY ADMIN */
 .admin-body { background-color: #f0f1f3; min-height: 100vh; }
-
-/* ─── PANTALLA DE LOGIN ─── */
+/* PANTALLA DE LOGIN */
 .login-screen {
   min-height: 100vh;
   display: flex;
@@ -15,7 +9,6 @@
   padding: 1.5rem;
   background: linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 50%, #2a1200 100%);
 }
-
 .login-box {
   background: #fff;
   border-radius: 18px;
@@ -25,20 +18,16 @@
   box-shadow: 0 24px 64px rgba(0,0,0,0.4);
   border-top: 4px solid var(--orange, #f54500);
 }
-
 .login-logo { text-align: center; margin-bottom: 2rem; }
 .login-logo img { height: 56px; width: auto; }
-
-/* ─── NAVBAR ADMIN ─── */
+/* NAVBAR ADMIN */
 #admin-navbar {
   background-color: #0a0a0a !important;
   border-bottom: 2px solid var(--orange, #f54500);
 }
-
-/* ─── PANEL ─── */
+/* PANEL */
 .admin-panel-card { border-radius: 14px; overflow: hidden; }
-
-/* ─── TABLA ADMIN ─── */
+/* TABLA ADMIN */
 .admin-table thead th {
   background: var(--dark, #1a1a1a);
   color: rgba(255,255,255,0.85);
@@ -50,15 +39,12 @@
   border: none;
   padding: 1rem 0.75rem;
 }
-
 .admin-table td {
   vertical-align: middle;
   padding: 0.85rem 0.75rem;
   border-bottom: 1px solid #f0f0f0;
 }
-
 .admin-table tr:last-child td { border-bottom: none; }
-
 .admin-thumb {
   width: 46px; height: 46px;
   object-fit: cover;
@@ -66,7 +52,6 @@
   border: 1.5px solid #eee;
   flex-shrink: 0;
 }
-
 .admin-thumb-placeholder {
   width: 46px; height: 46px;
   background: #f4f4f4;
@@ -76,39 +61,31 @@
   border: 1.5px solid #eee;
   flex-shrink: 0;
 }
-
 .admin-item-name { font-size: 0.9rem; }
 .admin-item-desc { font-size: 0.75rem; }
-
-/* ─── FILA DE GRUPO (variantes colapsadas) ─── */
+/* FILA DE GRUPO (variantes colapsadas) */
 .admin-group-header {
   background: #fafafa;
   cursor: pointer;
   user-select: none;
   transition: background 0.15s;
 }
-
 .admin-group-header:hover { background: #f0f1f3; }
-
 .admin-group-header td { border-bottom: 1px solid #e8e8e8 !important; }
-
 .group-chevron {
   font-size: 0.9rem;
   color: #888;
   transition: transform 0.2s;
 }
-
-/* ─── FILAS DE VARIANTE ─── */
+/* FILAS DE VARIANTE */
 .admin-variant-row { background: #fefefe; }
 .admin-variant-row td { border-left: 3px solid var(--orange, #f54500); }
-
 .variant-indent {
   display: flex;
   align-items: center;
   gap: 8px;
   padding-left: 1.25rem;
 }
-
 .variant-measure-pill {
   display: inline-block;
   background: rgba(245,69,0,0.1);
@@ -119,8 +96,7 @@
   font-size: 0.8rem;
   font-weight: 600;
 }
-
-/* ─── BADGE DE CANTIDAD DE VARIANTES (admin) ─── */
+/* BADGE DE CANTIDAD DE VARIANTES (admin) */
 .variant-count-badge {
   display: inline-block;
   background: rgba(245,69,0,0.12);
@@ -132,8 +108,7 @@
   font-weight: 700;
   white-space: nowrap;
 }
-
-/* ─── STOCK BUTTONS ─── */
+/* STOCK BUTTONS */
 .stock-btn {
   border: none; border-radius: 20px;
   padding: 4px 14px; font-size: 0.8rem; font-weight: 700;
@@ -143,8 +118,7 @@
 .stock-btn.in-stock:hover  { background: #a7f3d0; }
 .stock-btn.out-stock { background: #fee2e2; color: #991b1b; }
 .stock-btn.out-stock:hover { background: #fecaca; }
-
-/* ─── QUICK PRICE INPUT ─── */
+/* QUICK PRICE INPUT */
 .quick-price-input {
   width: 90px; border: 1.5px solid #e0e0e0; border-radius: 7px;
   padding: 4px 8px; font-size: 0.88rem; font-weight: 600;
@@ -155,10 +129,8 @@
   box-shadow: 0 0 0 2px rgba(245,69,0,0.12);
 }
 .quick-price-input.saved { border-color: #28a745; background: #f0fff4; }
-
-/* ─── MEDIDAS (formularios) ─── */
+/* MEDIDAS (formularios) */
 .measure-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
-
 .measure-chip {
   display: inline-flex; align-items: center; gap: 0.35rem;
   padding: 0.45rem 0.75rem; border-radius: 999px;
@@ -166,7 +138,6 @@
   font-size: 0.82rem; border: 1px solid rgba(245,69,0,0.25);
   position: relative;
 }
-
 .measure-chip-btn {
   border: none !important;
   background: rgba(255,255,255,0.9) !important;
@@ -178,7 +149,6 @@
 }
 .measure-chip-btn:hover { color: #dc3545; transform: scale(1.1); }
 .measure-chip-small { font-size: 0.78rem; padding: 0.3rem 0.55rem; }
-
 .measure-manager-group {
   margin-bottom: 1rem; padding: 0.9rem 0.85rem;
   background: #f8f9fa; border-radius: 14px;
@@ -187,8 +157,7 @@
 .measure-manager-items  { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .measure-manager-footer { text-align: center; margin-top: 0.5rem; }
 .btn-capsule { border-radius: 20px; font-size: 0.75rem; padding: 0.25rem 0.75rem; }
-
-/* ─── GESTIÓN CATEGORÍAS ─── */
+/* GESTIÓN CATEGORÍAS */
 .cat-manager-item {
   display: flex; align-items: center; gap: 8px;
   padding: 6px 8px; border-radius: 8px;
@@ -209,23 +178,17 @@
   border-radius: 6px; padding: 2px 7px; font-size: 0.78rem; cursor: pointer;
 }
 .cat-manager-add-btn { background: var(--orange, #f54500); color: white; border: none; cursor: pointer; }
-
-/* ─── IMAGEN EDICIÓN ─── */
+/* IMAGEN EDICIÓN */
 .edit-img-preview img {
   width: 72px; height: 72px; object-fit: cover;
   border-radius: 10px; border: 2px solid var(--orange, #f54500);
 }
-
-/* ════════════════════════════════════════
-   ESTILOS DE CATÁLOGO (usados en app.js)
-   ════════════════════════════════════════ */
-
-/* ─── CÁPSULA DE MEDIDA ─── */
+/* ESTILOS DE CATÁLOGO (usados en app.js) */
+/* CÁPSULA DE MEDIDA */
 .measure-capsules-row {
   display: flex; flex-wrap: wrap; gap: 0.3rem;
   margin-bottom: 0.4rem;
 }
-
 .measure-capsule {
   display: inline-block;
   background: rgba(13,110,253,0.08);
@@ -237,15 +200,13 @@
   font-weight: 700;
   letter-spacing: 0.2px;
 }
-
-/* ─── PRECIO PILL ─── */
+/* PRECIO PILL */
 .price-pills-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
-
 .price-pill {
   display: flex;
   flex-direction: column;
@@ -257,12 +218,10 @@
   min-width: 80px;
   flex: 1;
 }
-
 .price-pill-bulk {
   background: rgba(245,69,0,0.05);
   border-color: rgba(245,69,0,0.2);
 }
-
 .price-pill-label {
   font-size: 0.62rem;
   font-weight: 700;
@@ -271,8 +230,6 @@
   color: #888;
   margin-bottom: 2px;
 }
-
-/* Ambos precios con la misma tipografía y tamaño */
 .price-pill-value {
   font-size: 1.1rem;
   font-weight: 800;
@@ -280,24 +237,19 @@
   font-family: 'Poppins', sans-serif;
   line-height: 1.1;
 }
-
-/* ─── VARIANTES EN CATÁLOGO ─── */
+/* VARIANTES EN CATÁLOGO */
 .variants-catalog-list {
   border-top: 1px solid #f0f0f0;
   padding-top: 0.5rem;
 }
-
 .variant-catalog-row {
   padding: 0.5rem 0;
 }
-
 .variant-divider {
   height: 1px;
   background: #f0f0f0;
   margin: 0.25rem 0;
 }
-
-/* Botón carrito pequeño para variantes */
 .btn-cart-variant {
   background: var(--dark, #1a1a1a);
   color: white;
@@ -312,8 +264,6 @@
 }
 .btn-cart-variant:hover { background: var(--orange, #f54500); }
 .btn-cart-variant:disabled { background: #ccc; cursor: not-allowed; }
-
-/* Pill de "N variantes" en tarjeta de catálogo */
 .variant-count-pill {
   display: inline-block;
   background: #f0f0f0;
@@ -324,8 +274,7 @@
   font-size: 0.7rem;
   font-weight: 700;
 }
-
-/* ─── RESPONSIVE ─── */
+/* RESPONSIVE */
 @media (max-width: 576px) {
   .login-box { padding: 1.75rem 1.25rem; }
   .price-pill { min-width: 70px; }

@@ -165,6 +165,12 @@
             <div class="mb-3">
               <label class="form-label fw-semibold">Imagen del Producto</label>
               <input type="file" id="p-image" class="form-control" accept="image/*">
+              <div class="input-group mt-2">
+                <input type="text" id="p-image-url" class="form-control form-control-sm" placeholder="O pega el link de la imagen aquí...">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-search-p" title="Buscar en Google">
+                  <i class="bi bi-search"></i> Buscar
+                </button>
+              </div>
               <div class="progress mt-2 d-none" id="p-progress-bar" style="height:4px;">
                 <div class="progress-bar bg-orange" id="p-progress-fill" style="width:0%"></div>
               </div>
@@ -246,9 +252,24 @@
               <label class="form-label fw-semibold d-block">Imagen actual</label>
               <div id="edit-img-preview" class="edit-img-preview mb-2"></div>
               <input type="file" id="e-image" class="form-control mb-2" accept="image/*">
+              <div class="input-group mb-2">
+                <input type="text" id="e-image-url" class="form-control form-control-sm" placeholder="O pega el link de la imagen aquí...">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-search-e" title="Buscar en Google">
+                  <i class="bi bi-search"></i> Buscar
+                </button>
+              </div>
               <button type="button" id="e-remove-image-btn" class="btn btn-sm btn-outline-danger mt-1">
                 <i class="bi bi-trash me-1"></i>Quitar imagen
               </button>
+            </div>
+            
+            <div class="mb-3 p-2 bg-light border rounded">
+              <label class="form-label fw-bold small text-primary"><i class="bi bi-diagram-2-fill me-1"></i>¿Hacer variante de otro producto?</label>
+              <input type="text" id="e-parent-search" class="form-control form-control-sm mb-2" placeholder="🔍 Buscar producto para agrupar...">
+              <select id="e-parent-group" class="form-select form-select-sm" size="5">
+                <option value="">(Ninguno, es un producto principal)</option>
+              </select>
+              <small class="text-muted" style="font-size: 0.65rem;">Escribe arriba para filtrar la lista.</small>
             </div>
             
             <div class="mb-3 mt-3">
@@ -472,6 +493,7 @@
     </div>
   </div>
 
+  <script src="js/security.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/admin.js"></script>
 </body>
