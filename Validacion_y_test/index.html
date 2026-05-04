@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Validación y Usabilidad | Resultados de Test</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="presentation-shell">
+    <aside class="side-rail" aria-label="Navegacion de diapositivas">
+      <div class="brand-mark">VL</div>
+      <nav id="slideDots" class="slide-dots"></nav>
+      <div class="slide-counter"><span id="currentSlide">01</span>/<span id="totalSlides">17</span></div>
+    </aside>
+
+    <main class="deck" id="deck">
+      <section class="slide slide-hero is-active" data-title="Portada">
+        <div class="hero-layout">
+          <div class="hero-copy">
+            <p class="eyebrow">Validación de usabilidad y diseño</p>
+            <h1>Resultados del test de experiencia</h1>
+            <p class="hero-lead">
+              Dos estudios aplicados sobre la misma página: primero usabilidad del flujo
+              y luego validación de diseño, confianza y propuesta de valor.
+            </p>
+            <div class="hero-tags">
+              <span>Ferreteria</span>
+              <span>Catalogo digital</span>
+              <span>Compra por WhatsApp</span>
+            </div>
+          </div>
+          <div class="hero-scoreboard" aria-label="Metricas principales">
+            <article class="hero-stat accent-teal">
+              <span>80%</span>
+              <p>éxito al buscar una amoladora</p>
+            </article>
+            <article class="hero-stat accent-green">
+              <span>4.3/5</span>
+              <p>facilidad de navegación</p>
+            </article>
+            <article class="hero-stat accent-gold">
+              <span>4.1/5</span>
+              <p>confianza y satisfacción final</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Usabilidad">
+        <div class="study-kicker">Estudio 01</div>
+        <div class="slide-header">
+          <p class="eyebrow">Test de usabilidad</p>
+          <h2>El sitio se entiende como ferretería, pero el carrito y el envío del pedido generan fricción.</h2>
+        </div>
+        <div class="insight-grid">
+          <article class="insight-tile">
+            <span class="tile-number">01</span>
+            <h3>Propuesta reconocible</h3>
+            <p>10 de 10 participantes identificaron una ferretería, tienda de construcción o herramientas.</p>
+          </article>
+          <article class="insight-tile">
+            <span class="tile-number">02</span>
+            <h3>Búsqueda funcional</h3>
+            <p>La misión de encontrar una amoladora tuvo 80% de éxito y 20.3 segundos de duración promedio.</p>
+          </article>
+          <article class="insight-tile warning">
+            <span class="tile-number">03</span>
+            <h3>Carrito poco visible</h3>
+            <p>El resumen del carrito fue el punto de fricción más señalado: 40% lo eligió como dificultad principal.</p>
+          </article>
+          <article class="insight-tile warning">
+            <span class="tile-number">04</span>
+            <h3>Pedido requiere cierre claro</h3>
+            <p>Enviar el pedido alcanzó 70% de éxito, pero tuvo 30% de abandono y rutas indirectas largas.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Primera impresión">
+        <div class="slide-header split">
+          <div>
+            <p class="eyebrow">Primera impresión del sitio</p>
+            <h2>La categoría fue comprendida de forma inmediata.</h2>
+            <p class="question">¿Qué crees que vende o hace este sitio? Descríbelo con tus propias palabras.</p>
+          </div>
+          <div class="metric-pill">
+            <strong>10</strong>
+            <span>respuestas</span>
+          </div>
+        </div>
+        <div class="impression-layout">
+          <div class="recognition-gauge">
+            <div class="gauge-ring"><span>100%</span></div>
+            <p>asoció el sitio con ferretería, construcción, herramientas o tienda física del sector.</p>
+          </div>
+          <div class="quote-wall compact">
+            <blockquote>"Una ferretería para los vecinos."</blockquote>
+            <blockquote>"Vende productos de construcción."</blockquote>
+            <blockquote>"Se siente como una tienda especializada en herramientas."</blockquote>
+            <blockquote>"Es una tienda virtual con local físico."</blockquote>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>Lectura:</strong>
+          <span>La comprensión general es sólida, aunque una respuesta pidió imágenes más claras relacionadas con ferretería desde el primer impacto.</span>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Misiones">
+        <div class="slide-header">
+          <p class="eyebrow">Prototype test</p>
+          <h2>Buscar producto fue más directo que enviar el pedido.</h2>
+          <p class="chart-note">Cada tarjeta resume si la tarea se completó, si hubo abandono y si aparecieron clics fuera del objetivo.</p>
+        </div>
+        <div class="mission-grid">
+          <article class="mission-card">
+            <div class="mission-head">
+              <span>Buscar producto</span>
+              <strong>20.3s</strong>
+            </div>
+            <p>Imagina que necesitas comprar una amoladora. ¿Dónde harías clic para encontrarlo?</p>
+            <div id="searchMissionChart" class="radial-metrics"></div>
+          </article>
+          <article class="mission-card">
+            <div class="mission-head">
+              <span>Enviar pedido</span>
+              <strong>19.9s</strong>
+            </div>
+            <p>Ya tienes tus productos listos. ¿Dónde harías clic para enviar tu pedido al local?</p>
+            <div id="orderMissionChart" class="radial-metrics"></div>
+          </article>
+        </div>
+        <div class="path-summary">
+          <article><strong>Home → Productos → Amoladora</strong><span>ruta principal de búsqueda exitosa</span></article>
+          <article><strong>Productos → Carrito → WhatsApp</strong><span>ruta directa ideal para completar pedido</span></article>
+          <article><strong>Rutas indirectas</strong><span>aparecen al volver a productos, amoladora, tornillo o home</span></article>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Navegación">
+        <div class="slide-header split">
+          <div>
+            <p class="eyebrow">Experiencia de navegación</p>
+            <h2>La facilidad percibida fue alta, pero el resumen del carrito concentró la duda.</h2>
+            <p class="question">¿Qué tan fácil resultó navegar por el catálogo, agregar el producto al carrito y enviar el pedido por WhatsApp?</p>
+          </div>
+          <div class="metric-pill">
+            <strong>4.3</strong>
+            <span>promedio de facilidad / 10 respuestas</span>
+          </div>
+        </div>
+        <div class="dual-chart">
+          <div>
+            <h3>Facilidad de navegación</h3>
+            <p class="chart-note">Escala 1 a 5: de “muy difícil” a “muy fácil”. Cada columna muestra cuántas personas eligieron ese nivel.</p>
+            <div id="navigationChart" class="scale-chart compact-scale"></div>
+          </div>
+          <div>
+            <h3>Puntos de fricción</h3>
+            <p class="chart-note">Las barras muestran dónde se concentraron las dudas durante el proceso.</p>
+            <div id="frictionChart" class="horizontal-chart tight"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Cambios flujo">
+        <div class="slide-header">
+          <p class="eyebrow">Cambios en el flujo</p>
+          <h2>Las mejoras solicitadas apuntan a visibilidad del carrito, confirmación y jerarquía de productos.</h2>
+        </div>
+        <div class="flow-fix-layout">
+          <div class="stacked-meter" aria-label="Clasificación de oportunidades del flujo">
+            <div class="meter-segment attention" style="--size: 50%;">
+              <strong>50%</strong>
+              <span>pidió mejorar carrito, resumen o indicador de cantidad</span>
+            </div>
+            <div class="meter-segment ok" style="--size: 20%;">
+              <strong>20%</strong>
+              <span>no cambiaría nada; el flujo se entiende</span>
+            </div>
+            <div class="meter-segment info" style="--size: 30%;">
+              <strong>30%</strong>
+              <span>pidió categorías claras, clic en imagen o revisión final</span>
+            </div>
+          </div>
+          <div class="recommendation-stack">
+            <article>
+              <span>Prioridad alta</span>
+              <h3>Carrito fijo arriba a la derecha</h3>
+              <p>Varias respuestas lo describen como pequeño, poco visible o parecido a un pop-up de asistencia.</p>
+            </article>
+            <article>
+              <span>Prioridad media</span>
+              <h3>Notificación al agregar producto</h3>
+              <p>Mostrar confirmación, cantidad agregada y acceso inmediato a ver el carrito.</p>
+            </article>
+            <article>
+              <span>Prioridad media</span>
+              <h3>Revisión final del pedido</h3>
+              <p>Antes de WhatsApp, presentar una vista clara del resumen para reducir abandono.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Conclusiones UX">
+        <div class="slide-header">
+          <p class="eyebrow">Conclusiones de usabilidad</p>
+          <h2>El flujo base funciona; el cierre de compra necesita más señales visibles.</h2>
+        </div>
+        <div class="roadmap">
+          <article>
+            <span>1</span>
+            <h3>Hacer visible el carrito</h3>
+            <p>Ubicarlo arriba a la derecha, con contador persistente y vista previa desplegable.</p>
+          </article>
+          <article>
+            <span>2</span>
+            <h3>Confirmar cada acción</h3>
+            <p>Mostrar aviso cuando se agrega un producto y orientar al siguiente paso.</p>
+          </article>
+          <article>
+            <span>3</span>
+            <h3>Reducir rutas indirectas</h3>
+            <p>Dar caminos más claros desde producto, carrito y WhatsApp para completar pedido.</p>
+          </article>
+          <article>
+            <span>4</span>
+            <h3>Refinar entrada visual</h3>
+            <p>Reforzar imágenes de ferretería y categorías para que la primera impresión sea inequívoca.</p>
+          </article>
+        </div>
+        <div class="closing-band">
+          <strong>Conclusión UX:</strong>
+          <span>La usabilidad general es positiva, con 4.3/5 en navegación. La mayor ganancia está en convertir el carrito en un elemento visible, persistente y fácil de revisar.</span>
+        </div>
+      </section>
+
+      <section class="slide section-divider" data-title="Diseño">
+        <div class="divider-content">
+          <p class="eyebrow">Estudio 02</p>
+          <h2>Validación de diseño</h2>
+          <p>Resultados homologados a base n=10 sobre confianza, claridad del modelo de pedido, relevancia percibida y satisfacción final.</p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Resumen">
+        <div class="slide-header">
+          <p class="eyebrow">Lectura ejecutiva</p>
+          <h2>El diseño comunica valor, pero necesita reforzar claridad operativa.</h2>
+        </div>
+        <div class="insight-grid">
+          <article class="insight-tile">
+            <span class="tile-number">01</span>
+            <h3>Alta confianza inicial</h3>
+            <p>La seguridad para enviar pedidos alcanza 4.1/5 y el 80% votó 4 o 5.</p>
+          </article>
+          <article class="insight-tile">
+            <span class="tile-number">02</span>
+            <h3>WhatsApp suma valor</h3>
+            <p>Los comentarios asocian el contacto directo con asesoría, cercanía y decisión de compra.</p>
+          </article>
+          <article class="insight-tile warning">
+            <span class="tile-number">03</span>
+            <h3>Flujo de pagos ambiguo</h3>
+            <p>36% dijo que no quedó completamente claro que el sitio no procesa pagos.</p>
+          </article>
+          <article class="insight-tile warning">
+            <span class="tile-number">04</span>
+            <h3>Oportunidad mobile</h3>
+            <p>Una respuesta crítica indica que no pudo abrirse correctamente en dispositivos móviles.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Confianza">
+        <div class="slide-header split">
+          <div>
+            <p class="eyebrow">Confiabilidad</p>
+            <h2>Seguridad al enviar el pedido por el sitio</h2>
+            <p class="question">Del 1 al 5, ¿qué tan seguro(a) te sentirías enviando tu pedido a través de este sitio?</p>
+          </div>
+          <div class="metric-pill">
+            <strong>4.1</strong>
+            <span>promedio de seguridad / 10 respuestas</span>
+          </div>
+        </div>
+        <p class="chart-note">Escala 1 a 5: de “nada seguro” a “muy seguro”. Las columnas muestran la distribución de respuestas.</p>
+        <div id="trustChart" class="scale-chart" aria-label="Grafico de barras de confiabilidad"></div>
+        <div class="takeaway-row">
+          <div><strong>80%</strong><span>se ubicó en los niveles altos de seguridad: 4 o 5</span></div>
+          <div><strong>5/10</strong><span>personas marcaron la máxima seguridad: “muy seguro”</span></div>
+          <div><strong>1/10</strong><span>persona indicó el nivel más bajo: “nada seguro”</span></div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Mapa">
+        <div class="slide-header split">
+          <div>
+            <p class="eyebrow">Confiabilidad</p>
+            <h2>Mapa y trayectoria desde 2002 refuerzan credibilidad</h2>
+            <p class="question">¿Consideras que indicar la ubicación en el mapa o su existencia desde el año 2002 reforzó tu confianza?</p>
+          </div>
+          <div class="metric-pill">
+            <strong>10</strong>
+            <span>respuestas</span>
+          </div>
+        </div>
+        <div class="yes-no-stage">
+          <canvas id="mapTrustDonut" width="360" height="360" aria-label="Grafico circular de respuestas si y no"></canvas>
+          <div class="yes-no-copy">
+            <div class="mega-word"><span>YES</span><em>/</em><span class="muted">NO</span></div>
+            <p class="chart-note"></p>
+            <div class="split-stats">
+              <article><strong>90%</strong><span>9 de 10 personas dijeron que sí reforzó su confianza</span></article>
+              <article><strong>10%</strong><span>1 de 10 personas dijo que no cambió su confianza</span></article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Flujo">
+        <div class="slide-header split">
+          <div>
+            <p class="eyebrow">Entendimiento de flujo</p>
+            <h2>La regla de no procesar pagos necesita ser más explícita</h2>
+            <p class="question">¿La página comunica claramente que no realiza ni procesa pagos o transacciones directamente?</p>
+          </div>
+          <div class="metric-pill">
+            <strong>10</strong>
+            <span>respuestas</span>
+          </div>
+        </div>
+        <p class="chart-note">La barra mide claridad del mensaje: si el usuario entendió que el sitio no cobra ni procesa pagos directamente.</p>
+        <div id="flowChart" class="horizontal-chart"></div>
+        <div class="callout">
+          <strong>Lectura:</strong>
+          <span>60% entendió el flujo en algún nivel, pero el 40% marcó que no quedó completamente claro.</span>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Satisfaccion">
+        <div class="slide-header split">
+          <div>
+            <p class="eyebrow">Satisfaccion final</p>
+            <h2>Recomendación del sitio a compañeros o vecinos</h2>
+            <p class="question">Del 1 al 5, ¿qué tan probable es que recomiendes este sitio a alguien que compra en ferreterías?</p>
+          </div>
+          <div class="metric-pill">
+            <strong>4.1</strong>
+            <span>promedio de recomendación / 10 respuestas</span>
+          </div>
+        </div>
+        <p class="chart-note">Escala 1 a 5: de “no lo recomendaría” a “lo recomendaría sin dudarlo”.</p>
+        <div id="satisfactionChart" class="scale-chart"></div>
+        <div class="takeaway-row">
+          <div><strong>80%</strong><span>se ubicó en intención alta de recomendación: 4 o 5</span></div>
+          <div><strong>5/10</strong><span>personas eligieron la respuesta más fuerte: “sin dudarlo”</span></div>
+          <div><strong>2/10</strong><span>personas quedaron entre baja recomendación y neutralidad</span></div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Percepcion">
+        <div class="slide-header">
+          <p class="eyebrow">Percepcion del diseno</p>
+          <h2>Las palabras dominantes fueron facilidad, utilidad, modernidad y rapidez.</h2>
+          <p class="chart-note">Cada barra indica cuántas personas asociaron el diseño con esa palabra. Como podían elegir varias, los porcentajes no suman 100%.</p>
+        </div>
+        <div class="perception-layout">
+          <div id="wordBars" class="word-bars"></div>
+          <div class="word-cloud" aria-label="Nube de palabras">
+            <span class="w1">Fácil de usar</span>
+            <span class="w2">Útil</span>
+            <span class="w3">Moderno</span>
+            <span class="w4">Rapido</span>
+            <span class="w5">Familiar</span>
+            <span class="w6">Profesional</span>
+            <span class="w7">Confiable</span>
+            <span class="w8">Atractivo</span>
+            <span class="w9">Económico</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Comentarios">
+        <div class="slide-header">
+          <p class="eyebrow">Respuestas abiertas</p>
+          <h2>La mayoría encontró lo necesario; las oportunidades se concentran en detalle, fotos y mobile.</h2>
+        </div>
+        <div class="qual-layout">
+          <div class="stacked-meter" aria-label="Clasificacion de respuestas sobre informacion faltante">
+            <div class="meter-segment ok" style="--size: 70%;">
+              <strong>70%</strong>
+              <span>sin información faltante o todo correcto</span>
+            </div>
+            <div class="meter-segment attention" style="--size: 30%;">
+              <strong>30%</strong>
+              <span>mencionó detalle, fotos o versión móvil</span>
+            </div>
+          </div>
+          <div class="quote-wall">
+            <blockquote>"Encuentro fácilmente lo que busco."</blockquote>
+            <blockquote>"Me permite revisar el catálogo para realizar la compra por WhatsApp."</blockquote>
+            <blockquote>"Ayuda mucho tener la foto de los productos para poder decidir la compra."</blockquote>
+            <blockquote>"No se puede abrir en formato de dispositivos mobiles."</blockquote>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Valor">
+        <div class="slide-header">
+          <p class="eyebrow">Relevancia y propuesta de valor</p>
+          <h2>El sitio encaja especialmente con usuarios que necesitan decidir rápido y confirmar por WhatsApp.</h2>
+        </div>
+        <div class="value-map">
+          <article>
+            <span class="icon-dot teal"></span>
+            <h3>Facilidad de busqueda</h3>
+            <p>Los participantes destacaron rapidez, entendimiento sencillo y facilidad para encontrar productos.</p>
+          </article>
+          <article>
+            <span class="icon-dot gold"></span>
+            <h3>Catálogo como puente</h3>
+            <p>El catálogo no reemplaza la venta directa: prepara la decisión y lleva la conversación a WhatsApp.</p>
+          </article>
+          <article>
+            <span class="icon-dot coral"></span>
+            <h3>Confianza por asesoría</h3>
+            <p>WhatsApp fue percibido como una vía para resolver dudas antes de comprar.</p>
+          </article>
+          <article>
+            <span class="icon-dot ink"></span>
+            <h3>Brecha de audiencia</h3>
+            <p>Un perfil no suele comprar estos productos vía web y otro no pudo visualizar el sitio.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="slide closing-slide" data-title="Cierre">
+        <div class="slide-header">
+          <p class="eyebrow">Conclusiones generales</p>
+          <h2>Qué nos dicen ambos estudios antes de definir los siguientes pasos.</h2>
+        </div>
+        <div class="result-conclusion-card">
+          <div>
+            
+            <h3>La página ya comunica la categoría y genera confianza, pero el momento de cierre necesita señales más claras.</h3>
+            <p>
+              Los usuarios entienden que se trata de una ferretería, encuentran valor en el catálogo y perciben confianza
+              por WhatsApp, mapa y trayectoria. La oportunidad principal está en hacer visible el carrito, explicar mejor
+              el flujo de pedido y reforzar la experiencia móvil.
+            </p>
+          </div>
+          <div class="conclusion-points">
+            <article><strong>4.3/5</strong><span>facilidad de navegación</span></article>
+            <article><strong>80%</strong><span>éxito buscando producto</span></article>
+            <article><strong>40%</strong><span>fricción en resumen del carrito</span></article>
+            <article><strong>90%</strong><span>más confianza con mapa y trayectoria</span></article>
+          </div>
+        </div>
+        <div class="next-step-label">Siguientes pasos recomendados</div>
+        <div class="roadmap">
+          <article>
+            <span>1</span>
+            <h3>Corregir experiencia móvil</h3>
+            <p>Verificar apertura, layout responsive y legibilidad en teléfonos.</p>
+          </article>
+          <article>
+            <span>2</span>
+            <h3>Explicar el flujo de pago</h3>
+            <p>Mostrar que el sitio no cobra directamente y que el pedido se confirma por WhatsApp.</p>
+          </article>
+          <article>
+            <span>3</span>
+            <h3>Completar fichas de producto</h3>
+            <p>Agregar detalles, disponibilidad, medidas y mejores fotos cuando aplique.</p>
+          </article>
+          <article>
+            <span>4</span>
+            <h3>Conservar lo que funcionó</h3>
+            <p>Mantener rapidez, estructura simple, catálogo visual y contacto directo.</p>
+          </article>
+        </div>
+        <div class="closing-band">
+          <strong>Conclusion:</strong>
+          <span>La propuesta fue validada positivamente, con confianza y satisfacción promedio de 4.1/5. El mayor retorno está en aclarar el flujo y reforzar mobile.</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="controls" aria-label="Controles de presentacion">
+      <button id="prevBtn" type="button" aria-label="Diapositiva anterior">
+        <span aria-hidden="true">‹</span>
+      </button>
+      <div class="progress-track"><span id="progressBar"></span></div>
+      <button id="nextBtn" type="button" aria-label="Diapositiva siguiente">
+        <span aria-hidden="true">›</span>
+      </button>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
