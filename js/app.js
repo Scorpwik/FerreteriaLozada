@@ -4,7 +4,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, onSnapshot
+  getFirestore, collection, doc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -19,6 +19,7 @@ const firebaseConfig = {
 const app          = initializeApp(firebaseConfig);
 const db           = getFirestore(app);
 const productosRef = collection(db, "productos");
+const catalogSettingsRef = doc(db, "config", "catalogo");
 
 // ESTADO
 let catalogData          = [];
@@ -30,10 +31,23 @@ let publicStockFilter    = 'all';
 let publicPriceMin       = '';
 let publicPriceMax       = '';
 let selectedVariantsMemory = {}; 
+const PRODUCTS_PER_BATCH = 30;
+let visibleProductCount  = PRODUCTS_PER_BATCH;
+let showOnlyProductsWithImages = true;
 const waNumber           = "593982965530";
 
 // IMAGEN
 function getImage(p) { return p.imageB64 || p.image || p.imageUrl || ''; }
+function hasProductImage(p) { return !!getImage(p); }
+
+// FIRESTORE: CONFIGURACIÃ“N DEL CATÃLOGO
+onSnapshot(catalogSettingsRef, snapshot => {
+  showOnlyProductsWithImages = snapshot.data()?.showOnlyProductsWithImages ?? true;
+  resetCatalogPagination();
+  renderCatalog();
+}, err => {
+  console.error('Error configuraciÃ³n catÃ¡logo:', err);
+});
 
 // FIRESTORE: PRODUCTOS
 onSnapshot(productosRef, snapshot => {
@@ -94,13 +108,13 @@ function renderPriceArea(p) {
   if (!bulk) {
     const btnText = !p.stock ? 'Agotado' : '<i class="bi bi-cart-plus me-1"></i>Agregar';
     return `
-      <div class="mt-2 pt-2 border-top" onclick="event.stopPropagation()">
+      <div class="catalog-price-area mt-2 pt-2 border-top" onclick="event.stopPropagation()">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <span class="text-muted fw-bold" style="font-size: 0.75rem; text-transform: uppercase;">Precio</span>
           <span class="fw-bold text-success" style="font-size: 1.2rem;">$${unit.toFixed(2)}</span>
         </div>
-        <div class="d-flex align-items-end gap-2">
-          <div class="d-flex flex-column">
+        <div class="catalog-action-row d-flex align-items-end gap-2">
+          <div class="catalog-qty-control d-flex flex-column">
             <span class="text-muted mb-1" style="font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">Cantidad</span>
             <div class="input-group input-group-sm" style="width: 90px; flex-wrap: nowrap;">
               <button class="btn btn-outline-secondary px-2" type="button" onclick="this.nextElementSibling.stepDown()" ${btnDisabled}>-</button>
@@ -118,14 +132,14 @@ function renderPriceArea(p) {
     const btnTextBulk = !p.stock ? 'Agotado' : '<i class="bi bi-cart-plus"></i> Cto.';
     
     return `
-      <div class="d-flex flex-column gap-2 mt-2 pt-2 border-top" onclick="event.stopPropagation()">
+      <div class="catalog-price-area d-flex flex-column gap-2 mt-2 pt-2 border-top" onclick="event.stopPropagation()">
         <div class="p-2 rounded bg-white" style="border: 1px solid #e0e0e0;">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <span class="d-block text-muted fw-bold" style="font-size: 0.65rem; text-transform: uppercase;">Unidad</span>
             <span class="fw-bold text-success" style="font-size: 1.1rem;">$${unit.toFixed(2)}</span>
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <div class="input-group input-group-sm" style="width: 90px; flex-wrap: nowrap;">
+          <div class="catalog-action-row d-flex align-items-center gap-2">
+            <div class="catalog-qty-control input-group input-group-sm" style="width: 90px; flex-wrap: nowrap;">
               <button class="btn btn-outline-secondary px-2" type="button" onclick="this.nextElementSibling.stepDown()" ${btnDisabled}>-</button>
               <input type="number" class="form-control text-center px-1 qty-input" value="1" min="1" style="border-color: #ddd;" ${btnDisabled}>
               <button class="btn btn-outline-secondary px-2" type="button" onclick="this.previousElementSibling.stepUp()" ${btnDisabled}>+</button>
@@ -141,8 +155,8 @@ function renderPriceArea(p) {
             <span class="d-block text-muted fw-bold" style="font-size: 0.65rem; text-transform: uppercase;">Ciento</span>
             <span class="fw-bold text-danger" style="font-size: 1.1rem;">$${bulk.toFixed(2)}</span>
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <div class="input-group input-group-sm" style="width: 90px; flex-wrap: nowrap;">
+          <div class="catalog-action-row d-flex align-items-center gap-2">
+            <div class="catalog-qty-control input-group input-group-sm" style="width: 90px; flex-wrap: nowrap;">
               <button class="btn btn-outline-secondary px-2" type="button" style="border-color: #ffd8c9; background: white;" onclick="this.nextElementSibling.stepDown()" ${btnDisabled}>-</button>
               <input type="number" class="form-control text-center px-1 qty-input" value="1" min="1" style="border-color: #ffd8c9;" ${btnDisabled}>
               <button class="btn btn-outline-secondary px-2" type="button" style="border-color: #ffd8c9; background: white;" onclick="this.previousElementSibling.stepUp()" ${btnDisabled}>+</button>
@@ -162,7 +176,7 @@ function renderSingleCard(p) {
   const imgHTML = img ? `<img src="${img}" alt="${p.name}" loading="lazy">` : `<i class="bi bi-tools placeholder-icon"></i>`;
 
   return `
-    <div class="col-sm-6 col-lg-4">
+    <div class="col-4 col-lg-3">
       <div class="card product-card h-100 shadow-sm" onclick="openProductModal('${p.id}')" style="cursor: pointer;">
         <div class="product-img-container">${imgHTML}</div>
         <div class="card-body d-flex flex-column p-3">
@@ -194,7 +208,7 @@ function renderGroupCard(group) {
   }).join('');
 
   return `
-    <div class="col-sm-6 col-lg-4">
+    <div class="col-4 col-lg-3">
       <div class="card product-card h-100 shadow-sm" onclick="openProductModal('${base.id}')" style="cursor: pointer;">
         <div class="product-img-container">${imgHTML}</div>
         <div class="card-body d-flex flex-column p-3">
@@ -234,6 +248,7 @@ function renderCatalog() {
   if (!grid) return;
 
   let filtered = catalogData;
+  if (showOnlyProductsWithImages) filtered = filtered.filter(hasProductImage);
   if (publicCategoryFilter) filtered = filtered.filter(p => p.category === publicCategoryFilter);
   if (publicStockFilter === 'in')  filtered = filtered.filter(p => p.stock);
   if (publicStockFilter === 'out') filtered = filtered.filter(p => !p.stock);
@@ -261,11 +276,31 @@ function renderCatalog() {
     groups[p.name].push(p);
   });
 
-  grid.innerHTML = order.map(name => {
+  const visibleOrder = order.slice(0, visibleProductCount);
+  const cardsHTML = visibleOrder.map(name => {
     const group = groups[name];
     return group.length === 1 ? renderSingleCard(group[0]) : renderGroupCard(group);
   }).join('');
+
+  const showMoreHTML = order.length > visibleProductCount ? `
+    <div class="col-12 text-center pt-3">
+      <button type="button" class="btn btn-dark fw-bold px-4" onclick="showMoreProducts()">
+        <i class="bi bi-chevron-down me-2"></i>Mostrar mas productos
+      </button>
+      <p class="text-muted small mt-2 mb-0">Mostrando ${visibleOrder.length} de ${order.length} productos</p>
+    </div>` : '';
+
+  grid.innerHTML = cardsHTML + showMoreHTML;
 }
+
+function resetCatalogPagination() {
+  visibleProductCount = PRODUCTS_PER_BATCH;
+}
+
+window.showMoreProducts = function() {
+  visibleProductCount += PRODUCTS_PER_BATCH;
+  renderCatalog();
+};
 
 // MODAL VISTA RÁPIDA
 window.openProductModal = function(id) {
@@ -374,6 +409,8 @@ function updateCartUI() {
   const count   = cart.reduce((s, i) => s + i.quantity, 0);
   const countEl = document.getElementById('floatingCartCount');
   if (countEl) countEl.innerText = count;
+  const navCountEl = document.getElementById('navCartCount');
+  if (navCountEl) navCountEl.innerText = count;
 
   const container = document.getElementById('cart-items');
   if (!container) return;
@@ -444,12 +481,14 @@ document.getElementById('category-filters')?.addEventListener('click', e => {
   const btn = e.target.closest('button[data-filter]');
   if (!btn) return;
   publicCategoryFilter = btn.dataset.filter === 'Todos' ? '' : btn.dataset.filter;
+  resetCatalogPagination();
   refreshCategoryFilters();
   renderCatalog();
 });
 
 document.getElementById('public-search')?.addEventListener('input', e => {
   publicSearchQuery = e.target.value.trim();
+  resetCatalogPagination();
   renderCatalog();
 });
 
@@ -458,6 +497,7 @@ window.applyFilters = function() {
   publicStockFilter    = document.querySelector('input[name="public-stock-filter"]:checked')?.value || 'all';
   publicPriceMin       = document.getElementById('price-min')?.value.trim() || '';
   publicPriceMax       = document.getElementById('price-max')?.value.trim() || '';
+  resetCatalogPagination();
   renderCatalog();
   bootstrap.Modal.getInstance(document.getElementById('filtersModal'))?.hide();
 };
@@ -470,6 +510,7 @@ window.clearFilters = function() {
   document.getElementById('filter-category').value = '';
   document.getElementById('price-min').value = '';
   document.getElementById('price-max').value = '';
+  resetCatalogPagination();
   refreshCategoryFilters();
   renderCatalog();
 };

@@ -5,7 +5,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, collection, addDoc, deleteDoc,
-  doc, updateDoc, onSnapshot
+  doc, updateDoc, setDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   getAuth, signInWithEmailAndPassword,
@@ -26,6 +26,7 @@ const db           = getFirestore(app);
 const auth         = getAuth(app);
 const productosRef = collection(db, "productos");
 const medidasRef   = collection(db, "medidas");
+const catalogSettingsRef = doc(db, "config", "catalogo");
 
 // ESTADO
 let catalogData         = [];
@@ -46,7 +47,9 @@ let editImageRemoved    = false;
 let editingMeasureSections = new Set();
 let unsubProductos      = null;
 let unsubMedidas        = null;
+let unsubCatalogSettings = null;
 let openVariantGroups = new Set();
+let showOnlyProductsWithImages = true;
 
 // COMPRIMIR IMAGEN
 function compressImage(file, maxWidth = 800, quality = 0.75) {
@@ -109,6 +112,7 @@ function getFirebaseErrorMessage(code) {
 }
 
 function getImage(p) { return p.imageB64 || p.image || p.imageUrl || ''; }
+function hasProductImage(p) { return !!getImage(p); }
 
 function magicSearch(inputNameId) {
   const name = document.getElementById(inputNameId).value.trim();
@@ -142,6 +146,7 @@ onAuthStateChanged(auth, user => {
   } else {
     if (unsubMedidas) unsubMedidas();
     if (unsubProductos) unsubProductos();
+    if (unsubCatalogSettings) unsubCatalogSettings();
   }
 });
 
@@ -206,6 +211,13 @@ document.getElementById('btn-ver-tienda')?.addEventListener('click', e => { e.pr
 
 // FIRESTORE: CARGA DE DATOS
 function iniciarBaseDeDatos() {
+  unsubCatalogSettings = onSnapshot(catalogSettingsRef, snapshot => {
+    showOnlyProductsWithImages = snapshot.data()?.showOnlyProductsWithImages ?? true;
+    const toggle = document.getElementById('toggle-products-with-images');
+    if (toggle) toggle.checked = showOnlyProductsWithImages;
+    renderAdminTable();
+  }, err => console.error('Error configuraciÃ³n catÃ¡logo:', err));
+
   unsubMedidas = onSnapshot(medidasRef, snapshot => {
     if (snapshot.empty) {
       const defaults = {
@@ -258,6 +270,7 @@ function renderAdminTable() {
   if (!tbody) return;
 
   let filtered = catalogData;
+  if (showOnlyProductsWithImages) filtered = filtered.filter(hasProductImage);
   if (adminCategoryFilter) filtered = filtered.filter(p => p.category === adminCategoryFilter);
   if (adminStockFilter === 'in')  filtered = filtered.filter(p => p.stock);
   if (adminStockFilter === 'out') filtered = filtered.filter(p => !p.stock);
@@ -293,6 +306,20 @@ function renderAdminTable() {
       : renderGroupAdminRows(products, gIdx);
   }).join('');
 }
+
+document.getElementById('toggle-products-with-images')?.addEventListener('change', async e => {
+  const enabled = e.target.checked;
+  e.target.disabled = true;
+  try {
+    await setDoc(catalogSettingsRef, { showOnlyProductsWithImages: enabled }, { merge: true });
+  } catch (err) {
+    e.target.checked = showOnlyProductsWithImages;
+    showNotif('No se pudo guardar la configuraciÃ³n del catÃ¡logo.');
+    console.error('Error guardando configuraciÃ³n:', err);
+  } finally {
+    e.target.disabled = false;
+  }
+});
 
 function renderSingleAdminRow(p) {
   const img = getImage(p);
