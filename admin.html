@@ -1,23 +1,29 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin - Ferretería Lozada</title>
+  <link href="Assets/Icono.svg" rel="icon" type="image/svg+xml" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.4/font/bootstrap-icons.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/admin.css" />
 </head>
+
 <body class="admin-body">
 
   <nav class="navbar navbar-expand-lg sticky-top d-none" id="admin-navbar">
     <div class="container-fluid px-4">
       <a class="navbar-brand" href="#" id="admin-logo-link">
-        <img src="Assets/Icono.svg" alt="Logo of Ferretería Lozada depicting a house with tools, symbolizing home improvement and hardware supplies in a professional tone">
+        <img src="Assets/Icono.svg"
+          alt="Logo of Ferretería Lozada depicting a house with tools, symbolizing home improvement and hardware supplies in a professional tone">
         <span>FERRETERÍA LOZADA</span>
       </a>
       <div class="ms-auto d-flex align-items-center gap-3">
@@ -49,7 +55,8 @@
         <label class="form-label fw-semibold small">Correo electrónico</label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-          <input type="email" id="login-email" class="form-control" placeholder="admin@ferreterialozada.com" autocomplete="email">
+          <input type="email" id="login-email" class="form-control" placeholder="admin@ferreterialozada.com"
+            autocomplete="email">
         </div>
       </div>
 
@@ -57,8 +64,10 @@
         <label class="form-label fw-semibold small">Contraseña</label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-lock"></i></span>
-          <input type="password" id="login-password" class="form-control" placeholder="••••••••" autocomplete="current-password">
-          <button class="btn btn-outline-secondary" type="button" id="toggle-password" title="Mostrar/ocultar contraseña">
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••"
+            autocomplete="current-password">
+          <button class="btn btn-outline-secondary" type="button" id="toggle-password"
+            title="Mostrar/ocultar contraseña">
             <i class="bi bi-eye" id="toggle-password-icon"></i>
           </button>
         </div>
@@ -96,12 +105,14 @@
           </div>
         </div>
         <div class="col-auto ms-auto admin-primary-actions">
-          <button id="btn-new-product-modal" class="btn fw-bold shadow-sm px-4 btn-orange" data-bs-toggle="modal" data-bs-target="#addProductModal">
+          <button id="btn-new-product-modal" class="btn fw-bold shadow-sm px-4 btn-orange" data-bs-toggle="modal"
+            data-bs-target="#addProductModal">
             <i class="bi bi-plus-lg me-2"></i>Nuevo Producto
           </button>
           <div class="admin-image-filter-toggle mt-2">
             <div class="form-check form-switch mb-0">
-              <input class="form-check-input" type="checkbox" role="switch" id="toggle-products-with-images" aria-label="Mostrar solo productos con imagen" title="Mostrar solo productos con imagen">
+              <input class="form-check-input" type="checkbox" role="switch" id="toggle-products-with-images"
+                aria-label="Mostrar solo productos con imagen" title="Mostrar solo productos con imagen">
             </div>
           </div>
         </div>
@@ -113,11 +124,13 @@
             <div class="col-md-6">
               <div class="input-group input-group-sm">
                 <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                <input type="text" id="product-search" class="form-control" placeholder="Buscar productos por nombre...">
+                <input type="text" id="product-search" class="form-control"
+                  placeholder="Buscar productos por nombre...">
               </div>
             </div>
             <div class="col-md-6 d-flex gap-2">
-              <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#adminFiltersModal">
+              <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+                data-bs-target="#adminFiltersModal">
                 <i class="bi bi-funnel me-2"></i>Filtros
               </button>
               <button class="btn btn-outline-danger btn-sm" id="admin-clear-filters" title="Limpiar filtros">
@@ -140,9 +153,11 @@
               </tr>
             </thead>
             <tbody id="admin-table-body">
-              <tr><td colspan="6" class="text-center py-4 text-muted">
-                <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>Cargando...
-              </td></tr>
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">
+                  <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>Cargando...
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -165,14 +180,17 @@
             </div>
             <div class="mb-3">
               <label class="form-label fw-semibold">Descripción</label>
-              <textarea id="p-desc" class="form-control" rows="2" placeholder="Ej: Ideal para perforar concreto, madera y metal..."></textarea>
+              <textarea id="p-desc" class="form-control" rows="2"
+                placeholder="Ej: Ideal para perforar concreto, madera y metal..."></textarea>
             </div>
             <div class="mb-3">
               <label class="form-label fw-semibold">Imagen del Producto</label>
               <input type="file" id="p-image" class="form-control" accept="image/*">
               <div class="input-group mt-2">
-                <input type="text" id="p-image-url" class="form-control form-control-sm" placeholder="O pega el link de la imagen aquí...">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-search-p" title="Buscar en Google">
+                <input type="text" id="p-image-url" class="form-control form-control-sm"
+                  placeholder="O pega el link de la imagen aquí...">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-search-p"
+                  title="Buscar en Google">
                   <i class="bi bi-search"></i> Buscar
                 </button>
               </div>
@@ -181,7 +199,7 @@
               </div>
               <small class="text-muted">Máx. 5MB · JPG, PNG o WebP</small>
             </div>
-            
+
             <div class="mb-3 mt-3">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <label class="form-label fw-semibold mb-0">Categoría</label>
@@ -198,7 +216,8 @@
                 <input type="number" id="p-price" class="form-control" step="0.01" min="0" placeholder="0.00" required>
               </div>
               <div class="col-6">
-                <label class="form-label fw-semibold">Precio x Ciento ($) <span class="text-muted fw-normal small">(Opcional)</span></label>
+                <label class="form-label fw-semibold">Precio x Ciento ($) <span
+                    class="text-muted fw-normal small">(Opcional)</span></label>
                 <input type="number" id="p-bulk-price" class="form-control" step="0.01" min="0" placeholder="0.00">
               </div>
             </div>
@@ -258,8 +277,10 @@
               <div id="edit-img-preview" class="edit-img-preview mb-2"></div>
               <input type="file" id="e-image" class="form-control mb-2" accept="image/*">
               <div class="input-group mb-2">
-                <input type="text" id="e-image-url" class="form-control form-control-sm" placeholder="O pega el link de la imagen aquí...">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-search-e" title="Buscar en Google">
+                <input type="text" id="e-image-url" class="form-control form-control-sm"
+                  placeholder="O pega el link de la imagen aquí...">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-search-e"
+                  title="Buscar en Google">
                   <i class="bi bi-search"></i> Buscar
                 </button>
               </div>
@@ -267,16 +288,18 @@
                 <i class="bi bi-trash me-1"></i>Quitar imagen
               </button>
             </div>
-            
+
             <div class="mb-3 p-2 bg-light border rounded">
-              <label class="form-label fw-bold small text-primary"><i class="bi bi-diagram-2-fill me-1"></i>¿Hacer variante de otro producto?</label>
-              <input type="text" id="e-parent-search" class="form-control form-control-sm mb-2" placeholder="🔍 Buscar producto para agrupar...">
+              <label class="form-label fw-bold small text-primary"><i class="bi bi-diagram-2-fill me-1"></i>¿Hacer
+                variante de otro producto?</label>
+              <input type="text" id="e-parent-search" class="form-control form-control-sm mb-2"
+                placeholder="🔍 Buscar producto para agrupar...">
               <select id="e-parent-group" class="form-select form-select-sm" size="5">
                 <option value="">(Ninguno, es un producto principal)</option>
               </select>
               <small class="text-muted" style="font-size: 0.65rem;">Escribe arriba para filtrar la lista.</small>
             </div>
-            
+
             <div class="mb-3 mt-3">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <label class="form-label fw-semibold mb-0">Categoría</label>
@@ -293,7 +316,8 @@
                 <input type="number" id="e-price" class="form-control" step="0.01" min="0" required>
               </div>
               <div class="col-6">
-                <label class="form-label fw-semibold">Precio x Ciento ($) <span class="text-muted fw-normal small">(Opcional)</span></label>
+                <label class="form-label fw-semibold">Precio x Ciento ($) <span
+                    class="text-muted fw-normal small">(Opcional)</span></label>
                 <input type="number" id="e-bulk-price" class="form-control" step="0.01" min="0" placeholder="0.00">
               </div>
             </div>
@@ -502,4 +526,5 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/admin.js"></script>
 </body>
+
 </html>
