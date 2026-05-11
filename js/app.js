@@ -59,6 +59,16 @@ onSnapshot(productosRef, snapshot => {
     if (data.category && !dynamicCategories.includes(data.category))
       dynamicCategories.push(data.category);
   });
+
+  // Orden lógico: Alfabéticamente, pero "Otros" siempre al final
+  dynamicCategories.sort((a, b) => {
+    const aLower = a.toLowerCase();
+    const bLower = b.toLowerCase();
+    if (aLower === 'otros') return 1;
+    if (bLower === 'otros') return -1;
+    return a.localeCompare(b);
+  });
+
   refreshCategoryFilters();
   refreshCategorySelects();
   renderCatalog();
@@ -498,6 +508,7 @@ window.applyFilters = function() {
   publicPriceMin       = document.getElementById('price-min')?.value.trim() || '';
   publicPriceMax       = document.getElementById('price-max')?.value.trim() || '';
   resetCatalogPagination();
+  refreshCategoryFilters();
   renderCatalog();
   bootstrap.Modal.getInstance(document.getElementById('filtersModal'))?.hide();
 };

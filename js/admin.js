@@ -255,6 +255,15 @@ function iniciarBaseDeDatos() {
       }
     });
 
+    // Orden lógico: Alfabéticamente, "Otros" al final
+    dynamicCategories.sort((a, b) => {
+      const aLower = a.toLowerCase();
+      const bLower = b.toLowerCase();
+      if (aLower === 'otros') return 1;
+      if (bLower === 'otros') return -1;
+      return a.localeCompare(b);
+    });
+
     if (newCatsFound && medidasDocId) {
       updateDoc(doc(db, 'medidas', medidasDocId), { categories: dynamicCategories });
     }
