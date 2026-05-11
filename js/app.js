@@ -39,6 +39,18 @@ const waNumber           = "593982965530";
 // IMAGEN
 function getImage(p) { return p.imageB64 || p.image || p.imageUrl || ''; }
 function hasProductImage(p) { return !!getImage(p); }
+function groupHasImage(productName) {
+  return catalogData.some(p => p.name === productName && hasProductImage(p));
+}
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
 
 // FIRESTORE: CONFIGURACIÃ“N DEL CATÃLOGO
 onSnapshot(catalogSettingsRef, snapshot => {
@@ -104,7 +116,37 @@ function renderMeasureCapsules(p) {
   
   if (measures.length === 0) return '<span class="text-muted small mb-2 d-block">Sin medida</span>';
   return `<div class="d-flex flex-wrap gap-1 mb-2">` + 
-    measures.map(m => `<span class="badge bg-secondary">${m}</span>`).join('') + `</div>`;
+    measures.map(m => `<span class="badge bg-secondary">${escapeHtml(m)}</span>`).join('') + `</div>`;
+}
+
+function getMeasures(p) {
+  if (Array.isArray(p.measures) && p.measures.length > 0) return p.measures;
+  return p.measure ? [p.measure] : [];
+}
+
+function renderCardMeasureControl(p) {
+  const measures = getMeasures(p);
+  if (measures.length === 0) return '<span class="text-muted small mb-2 d-block">Sin medida</span>';
+  if (measures.length === 1) return renderMeasureCapsules(p);
+
+  return `
+    <div class="card-measure-control mb-2" onclick="event.stopPropagation()">
+      <label class="small text-muted mb-1 fw-bold"><i class="bi bi-rulers me-1"></i>Medida:</label>
+      <select class="form-select form-select-sm measure-choice-select" aria-label="Seleccionar medida">
+        ${measures.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('')}
+      </select>
+    </div>`;
+}
+
+function renderModalMeasureControl(p) {
+  const measures = getMeasures(p);
+  if (measures.length <= 1) return renderMeasureCapsules(p);
+
+  return `
+    <label class="small text-muted mb-1 fw-bold">Seleccione la medida:</label>
+    <select class="form-select form-select-sm mb-3 measure-choice-select" style="border-color: var(--orange);">
+      ${measures.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('')}
+    </select>`;
 }
 
 function renderPriceArea(p) {
@@ -112,7 +154,6 @@ function renderPriceArea(p) {
   const bulk = p.bulkPrice != null && p.bulkPrice > 0 ? parseFloat(p.bulkPrice) : null;
   if (unit === null) return '';
 
-  const measureArg = p.measure ? p.measure.replace(/'/g, "\\'") : '';
   const btnDisabled = !p.stock ? 'disabled' : '';
   
   if (!bulk) {
@@ -132,7 +173,7 @@ function renderPriceArea(p) {
               <button class="btn btn-outline-secondary px-2" type="button" onclick="this.previousElementSibling.stepUp()" ${btnDisabled}>+</button>
             </div>
           </div>
-          <button class="btn btn-dark fw-bold btn-sm flex-grow-1 shadow-sm" style="height: 31px;" onclick="addToCart('${p.id}', '${measureArg}', 'unit', this.parentElement.querySelector('.qty-input').value)" ${btnDisabled}>
+          <button class="btn btn-dark fw-bold btn-sm flex-grow-1 shadow-sm" style="height: 31px;" onclick="addSelectedMeasureToCart('${p.id}', 'unit', this.parentElement.querySelector('.qty-input')?.value || '1', this)" ${btnDisabled}>
             ${btnText}
           </button>
         </div>
@@ -154,7 +195,7 @@ function renderPriceArea(p) {
               <input type="number" class="form-control text-center px-1 qty-input" value="1" min="1" style="border-color: #ddd;" ${btnDisabled}>
               <button class="btn btn-outline-secondary px-2" type="button" onclick="this.previousElementSibling.stepUp()" ${btnDisabled}>+</button>
             </div>
-            <button class="btn btn-sm btn-dark fw-bold flex-grow-1 shadow-sm" onclick="addToCart('${p.id}', '${measureArg}', 'unit', this.parentElement.querySelector('.qty-input').value)" ${btnDisabled}>
+            <button class="btn btn-sm btn-dark fw-bold flex-grow-1 shadow-sm" onclick="addSelectedMeasureToCart('${p.id}', 'unit', this.parentElement.querySelector('.qty-input')?.value || '1', this)" ${btnDisabled}>
               ${btnTextUnit}
             </button>
           </div>
@@ -171,7 +212,7 @@ function renderPriceArea(p) {
               <input type="number" class="form-control text-center px-1 qty-input" value="1" min="1" style="border-color: #ffd8c9;" ${btnDisabled}>
               <button class="btn btn-outline-secondary px-2" type="button" style="border-color: #ffd8c9; background: white;" onclick="this.previousElementSibling.stepUp()" ${btnDisabled}>+</button>
             </div>
-            <button class="btn btn-sm btn-outline-danger bg-white fw-bold flex-grow-1 shadow-sm" onclick="addToCart('${p.id}', '${measureArg}', 'bulk', this.parentElement.querySelector('.qty-input').value)" ${btnDisabled}>
+            <button class="btn btn-sm btn-outline-danger bg-white fw-bold flex-grow-1 shadow-sm" onclick="addSelectedMeasureToCart('${p.id}', 'bulk', this.parentElement.querySelector('.qty-input')?.value || '1', this)" ${btnDisabled}>
               ${btnTextBulk}
             </button>
           </div>
@@ -179,6 +220,15 @@ function renderPriceArea(p) {
       </div>`;
   }
 }
+
+window.addSelectedMeasureToCart = function(id, priceType = 'unit', qtyStr = "1", sourceEl = null) {
+  const p = catalogData.find(x => x.id === id);
+  if (!p) return;
+
+  const scope = sourceEl?.closest('.product-card, .modal-content') || document;
+  const selectedMeasure = scope.querySelector('.measure-choice-select')?.value || p.measure || getMeasures(p)[0] || '';
+  addToCart(id, selectedMeasure, priceType, qtyStr);
+};
 
 // RENDER TARJETAS
 function renderSingleCard(p) {
@@ -191,7 +241,7 @@ function renderSingleCard(p) {
         <div class="product-img-container">${imgHTML}</div>
         <div class="card-body d-flex flex-column p-3">
           <span class="product-badge mb-2 align-self-start">${p.category || '—'}</span>
-          ${renderMeasureCapsules(p)}
+          ${renderCardMeasureControl(p)}
           <h6 class="fw-bold mb-2 mt-1">${p.name}</h6>
           ${p.desc ? `<p class="text-muted small mb-2 flex-grow-1">${p.desc}</p>` : '<div class="flex-grow-1"></div>'}
           
@@ -205,7 +255,8 @@ function renderSingleCard(p) {
 
 function renderGroupCard(group) {
   const base = group[0];
-  const img  = getImage(base);
+  const visualProduct = group.find(getImage) || base;
+  const img  = getImage(visualProduct);
   const imgHTML = img ? `<img src="${img}" alt="${base.name}" loading="lazy">` : `<i class="bi bi-tools placeholder-icon"></i>`;
 
   const activeVariantId = selectedVariantsMemory[base.id] || base.id;
@@ -214,7 +265,7 @@ function renderGroupCard(group) {
   const options = group.map(p => {
     const label = p.measure || (p.measures && p.measures[0]) || 'Sin medida';
     const isSelected = p.id === activeVariant.id ? 'selected' : '';
-    return `<option value="${p.id}" ${isSelected}>${label}</option>`;
+    return `<option value="${p.id}" ${isSelected}>${escapeHtml(label)}</option>`;
   }).join('');
 
   return `
@@ -258,7 +309,7 @@ function renderCatalog() {
   if (!grid) return;
 
   let filtered = catalogData;
-  if (showOnlyProductsWithImages) filtered = filtered.filter(hasProductImage);
+  if (showOnlyProductsWithImages) filtered = filtered.filter(p => groupHasImage(p.name));
   if (publicCategoryFilter) filtered = filtered.filter(p => p.category === publicCategoryFilter);
   if (publicStockFilter === 'in')  filtered = filtered.filter(p => p.stock);
   if (publicStockFilter === 'out') filtered = filtered.filter(p => !p.stock);
@@ -339,7 +390,7 @@ window.openProductModal = function(id) {
     const options = group.map(v => {
       const label = v.measure || (v.measures && v.measures[0]) || 'Sin medida';
       const isSelected = v.id === activeProduct.id ? 'selected' : '';
-      return `<option value="${v.id}" ${isSelected}>${label}</option>`;
+      return `<option value="${v.id}" ${isSelected}>${escapeHtml(label)}</option>`;
     }).join('');
     
     measuresContainer.innerHTML = `
@@ -349,7 +400,7 @@ window.openProductModal = function(id) {
       </select>
     `;
   } else {
-    measuresContainer.innerHTML = renderMeasureCapsules(activeProduct);
+    measuresContainer.innerHTML = renderModalMeasureControl(activeProduct);
   }
 
   document.getElementById('detail-price-area').innerHTML = renderPriceArea(activeProduct);
