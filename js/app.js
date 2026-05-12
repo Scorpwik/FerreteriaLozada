@@ -4,7 +4,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, doc, onSnapshot
+  getFirestore, collection, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -19,7 +19,6 @@ const firebaseConfig = {
 const app          = initializeApp(firebaseConfig);
 const db           = getFirestore(app);
 const productosRef = collection(db, "productos");
-const catalogSettingsRef = doc(db, "config", "catalogo");
 
 // ESTADO
 let catalogData          = [];
@@ -33,12 +32,13 @@ let publicPriceMax       = '';
 let selectedVariantsMemory = {}; 
 const PRODUCTS_PER_BATCH = 30;
 let visibleProductCount  = PRODUCTS_PER_BATCH;
-let showOnlyProductsWithImages = true;
-const waNumber           = "593982965530";
+// Cambiar a false para mostrar tambien productos sin imagen en el catalogo publico.
+const SHOW_ONLY_PRODUCTS_WITH_IMAGES = true;
+const waNumber           = "593995307272";
 
 // IMAGEN
 function getImage(p) { return p.imageB64 || p.image || p.imageUrl || ''; }
-function hasProductImage(p) { return !!getImage(p); }
+function hasProductImage(p) { return String(getImage(p)).trim().length > 0; }
 function groupHasImage(productName) {
   return catalogData.some(p => p.name === productName && hasProductImage(p));
 }
@@ -51,15 +51,6 @@ function escapeHtml(value) {
     "'": '&#39;'
   }[ch]));
 }
-
-// FIRESTORE: CONFIGURACIÃ“N DEL CATÃLOGO
-onSnapshot(catalogSettingsRef, snapshot => {
-  showOnlyProductsWithImages = snapshot.data()?.showOnlyProductsWithImages ?? true;
-  resetCatalogPagination();
-  renderCatalog();
-}, err => {
-  console.error('Error configuraciÃ³n catÃ¡logo:', err);
-});
 
 // FIRESTORE: PRODUCTOS
 onSnapshot(productosRef, snapshot => {
@@ -309,7 +300,7 @@ function renderCatalog() {
   if (!grid) return;
 
   let filtered = catalogData;
-  if (showOnlyProductsWithImages) filtered = filtered.filter(p => groupHasImage(p.name));
+  if (SHOW_ONLY_PRODUCTS_WITH_IMAGES) filtered = filtered.filter(p => groupHasImage(p.name));
   if (publicCategoryFilter) filtered = filtered.filter(p => p.category === publicCategoryFilter);
   if (publicStockFilter === 'in')  filtered = filtered.filter(p => p.stock);
   if (publicStockFilter === 'out') filtered = filtered.filter(p => !p.stock);
