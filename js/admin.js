@@ -276,8 +276,10 @@ function renderAdminTable() {
   const tbody = document.getElementById('admin-table-body');
   if (!tbody) return;
 
-  let filtered = catalogData;
-  if (SHOW_ONLY_PRODUCTS_WITH_IMAGES) filtered = filtered.filter(hasProductImage);
+  const visibleBase = SHOW_ONLY_PRODUCTS_WITH_IMAGES
+    ? catalogData.filter(hasProductImage)
+    : catalogData;
+  let filtered = visibleBase;
   if (adminCategoryFilter) filtered = filtered.filter(p => p.category === adminCategoryFilter);
   if (adminStockFilter === 'in')  filtered = filtered.filter(p => p.stock);
   if (adminStockFilter === 'out') filtered = filtered.filter(p => !p.stock);
@@ -287,14 +289,14 @@ function renderAdminTable() {
 
   const countEl = document.getElementById('admin-product-count');
   if (countEl) {
-    countEl.innerHTML = filtered.length === catalogData.length
-      ? `<strong>${catalogData.length}</strong> productos`
-      : `Mostrando <strong>${filtered.length}</strong> de <strong>${catalogData.length}</strong> productos`;
+    countEl.innerHTML = filtered.length === visibleBase.length
+      ? `<strong>${visibleBase.length}</strong> productos`
+      : `Mostrando <strong>${filtered.length}</strong> de <strong>${visibleBase.length}</strong> productos`;
   }
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">
-      ${catalogData.length === 0 ? 'No hay productos. Agrega el primero.' : 'Sin resultados para esos filtros.'}
+      ${visibleBase.length === 0 ? 'No hay productos. Agrega el primero.' : 'Sin resultados para esos filtros.'}
     </td></tr>`;
     return;
   }
