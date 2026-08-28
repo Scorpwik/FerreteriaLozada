@@ -32,8 +32,8 @@ let publicPriceMax       = '';
 let selectedVariantsMemory = {}; 
 const PRODUCTS_PER_BATCH = 30;
 let visibleProductCount  = PRODUCTS_PER_BATCH;
-// Cambiar a false para mostrar tambien productos sin imagen en el catalogo publico.
-const SHOW_ONLY_PRODUCTS_WITH_IMAGES = true;
+// Configurado en false para mostrar todos los productos completos (con y sin imagen) en el catálogo público.
+const SHOW_ONLY_PRODUCTS_WITH_IMAGES = false;
 const waNumber           = "593995307272";
 
 // IMAGEN

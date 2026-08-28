@@ -26,11 +26,8 @@ const db           = getFirestore(app);
 const auth         = getAuth(app);
 const productosRef = collection(db, "productos");
 const medidasRef   = collection(db, "medidas");
-const DEMO_ADMIN_EMAIL = 'admin@gmail.com';
-const DEMO_ADMIN_TYPED_PASSWORD = 'admin';
-const DEMO_ADMIN_FIREBASE_PASSWORD = 'admin123';
-// Cambiar a false para mostrar tambien productos sin imagen en el panel admin.
-const SHOW_ONLY_PRODUCTS_WITH_IMAGES = true;
+// Configurado en false para mostrar todos los productos en el panel de administración
+const SHOW_ONLY_PRODUCTS_WITH_IMAGES = false;
 
 // ESTADO
 let catalogData         = [];
@@ -154,12 +151,9 @@ onAuthStateChanged(auth, user => {
 // LOGIN & LOGOUT
 document.getElementById('btn-login')?.addEventListener('click', async () => {
   const email    = document.getElementById('login-email')?.value.trim();
-  let password = document.getElementById('login-password')?.value;
+  const password = document.getElementById('login-password')?.value;
   setLoginError('');
   if (!email || !password) { setLoginError('Ingrese correo y contraseña.'); return; }
-  if (email.toLowerCase() === DEMO_ADMIN_EMAIL && password === DEMO_ADMIN_TYPED_PASSWORD) {
-    password = DEMO_ADMIN_FIREBASE_PASSWORD;
-  }
   setLoginLoading(true);
   try {
     await signInWithEmailAndPassword(auth, email, password);
