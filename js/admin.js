@@ -29,6 +29,86 @@ const medidasRef   = collection(db, "medidas");
 // Configurado en false para mostrar todos los productos en el panel de administración
 const SHOW_ONLY_PRODUCTS_WITH_IMAGES = false;
 
+// CATEGORÍAS PRINCIPALES NORMALIZADAS
+const MAIN_CATEGORIES = [
+  'Plomería y Tuberías',
+  'Eléctricos e Iluminación',
+  'Herramientas Manuales',
+  'Herramientas Eléctricas y Maquinaria',
+  'Construcción y Materiales',
+  'Ferretería y Fijaciones',
+  'Pinturas y Químicos',
+  'Seguridad y Protección',
+  'Otros'
+];
+
+function normalizeCategory(rawCat) {
+  if (!rawCat) return 'Otros';
+  const c = String(rawCat).trim().toUpperCase();
+
+  for (const mainCat of MAIN_CATEGORIES) {
+    if (c === mainCat.toUpperCase()) return mainCat;
+  }
+
+  if (/CODO|TEE|TUBO|TUBERIA|VALVULA|VALVULITA|NEPLO|SIFON|ABRAZADERA|ACOPLE|ADAPTADOR|BAJANTE|BOQUILLA|BUSHING|CACHIMBA|CANASTILLA|COLLARIN|DERIVACION|DERIVADOR|DUCHA|FREGADERO|FLOTADOR|FLANGE|LAVAMANOS|LLAVE|LLAVA|LLAMA|LLOVEDORA|MANGUERA|MEZCLADOR|MEZCLADORA|MESCLADORA|MONOMANDO|REDUCCION|REJILLA|SAPITO|TANQUE|TAPON|TAPA|TE|TRAMPA|UNION|YE|YEE|PLOMERÍA/i.test(c)) {
+    return 'Plomería y Tuberías';
+  }
+  if (/CABLE|CABLEADO|CABLES|BREAKER|FOCO|FLUORECENTE|INTERRUPTOR|TOMA|CANALETA|CONECTOR|EXTENSION|PLAFON|ALARGUE|ANTENA|APLIQUE|AUTOMATICO|BASE|BATON|BASTON|BATERIA|BORNERA|BOTON|BOTONERA|BRAZO|CAJA|CAJAS|CAJETIN|CAPUCHON|CARGADOR|CAUTIN|CINTA|CONMUTADO|CONMUTADOR|DETECTOR|DIMER|DUCTO|ELECTRODO|ELETRODO|ENCHUFE|LAMPARA|LINTERNA|MEDIDOR|MULTIMETRO|PANEL|PILA|PILAS|PIN3|PLACA|PULSADOR|REFLECTOR|REGULADOR|SENSOR|SIRENA|SOQUER|SWITCH|TAIPE|TAYPE|TIMBRE|TIMBRADOR|TIMER|ELÉCTRICO/i.test(c)) {
+    return 'Eléctricos e Iluminación';
+  }
+  if (/AMOLADORA|ATORNILLADOR|BOMBA|CALADORA|CHAMPEADORA|COMPRESOR|CORTADORA|DEWALT|ESMERIL|EMTOP|EXTRACTOR|INGCO|INGLETEADORA|LIJADORA|MAQUINARIA|MOTOR|PULIDORA|RECTIFICADORA|ROTOMARTILLO|SOLDADORA|SOPLADORA|TALADRO|TRONZADORA|TUPI|MAQUINAS|MOTO/i.test(c)) {
+    return 'Herramientas Eléctricas y Maquinaria';
+  }
+  if (/ALICATE|ARCO|AVELLANADOR|AZADON|BAILEJO|BALANCIN|BARRA|BARRETA|BERBIQUIN|BISTURI|BROCA|BROCHA|CABO|CALIBRADOR|CEPILLO|CINCEL|CIZALLA|COMBO|COMPROBADOR|CORTA|CORTADOR|COPA|CUCHILLA|DADO|DESARMADOR|DESTORNILLADOR|ESCOBILLA|ESCORFINA|ESCUADRA|ESPATULA|ESTILETE|FLEXOMETRO|FORMON|GATA|GRATA|GRIFIN|HACHA|HACHUELA|JUEGO|JUEGOS|LIANA|LIMA|MACHETE|MACHUELO|MANDRIL|MARTILLO|NIVEL|NIVELADOR|PALA|PALANCA|PALETA|PATA|PELA|PELADOR|PICO|PINZA|PLAYO|PLOMADA|PRENSA|RACHA|RASTRILLO|REFAJADORA|REMACHADORA|RODILLO|SACABOCADO|SEGUETA|SERRUCHO|SIERRA|TARRAJA|TENAZA|TERRAJA|TIJERA|TIZA|TORX|HERRAMIENTA/i.test(c)) {
+    return 'Herramientas Manuales';
+  }
+  if (/ARENA|BALDE|BANDEJA|BETONCRYL|BONDEX|CARBONATO|CEMENTINA|CEMENTO|CERAMICA|COSTAL|HORMIGON|MICA|MORTERO|POLICARBONATO|PORCELANA|RESINPLAST|TRIANGULOS|VARILLA|YESO|ZINC|CONSTRUCCIÓN/i.test(c)) {
+    return 'Construcción y Materiales';
+  }
+  if (/ABRAZADERA|AGUJA|ALAMBRE|ALDABA|AMARRAS|ANCLAJE|ANGULO|ANILLO|ARGOLLA|ARGOLLAS|ARMELLA|ARNES|BISAGRA|BIASAGRA|BIASGRA|CADENA|CANCAMO|CANDADO|CAPUCHA|CERROJO|CHAPA|CLAVILLO|CLAVO|CORREDERA|ESLINGA|GANCHO|GARRUCHA|GRAPA|GRAPADORA|GRILLETE|HERRAJE|NUDO|NYLON|NAYLON|PERNO|PICAPORTE|PLATINA|POLEA|POLE|REGATON|REMACHE|RESBALON|RIEL|RODACHIN|RODAMIENTO|RODCHIN|RODELA|RUEDA|TACHUELA|TACO|TEMPLADOR|TIRADERA|TIRAFONDO|TOPE|TORNILLO|TORNILLERIA|TRABADOR|TUERCA|UÑETA|FERRETERÍA/i.test(c)) {
+    return 'Ferretería y Fijaciones';
+  }
+  if (/ABRILLANTADOR|ACEITE|ACELERANTE|AKFIX|ALCOHOL|ANTICORROSIVO|AQUA|ARMORALL|BARNIZ|BETUN|CATALIZADOR|CAUCHO|CERA|COLA|DECAPANTE|DECORLAC|DESENGRASANTE|DESOXIDANTE|DIODIN|DISCO|EMPASTE|EMULSION|EPOXICA|EPOXICO|ESMALTE|ESPUMA|FONDOLAC|FRAGUA|GALON|GAS|GRASA|GUAIPE|IGOL|KALIPEGA|LACA|LIMPIADOR|LIMPIA|LIQUIDO|LUSTRE|MADEROL|MASILLA|MASTIKO|MURIATOL|MUSTANG|PASTA|PEGA|PEGATATANKE|PEGATUBO|PERMALATEX|PIGMENTO|PINTURA|PINTURAS|PULIMENTO|QUILOSA|REMOVEDOR|RESINA|ROMERAL|SELLO|SIKA|SIKADUR|SIKAFLEX|SIKATOP|SILICON|SIMONIZ|SPRAY|TEFLON|THINNER|TINTE|VENENO|WD40/i.test(c)) {
+    return 'Pinturas y Químicos';
+  }
+  if (/BOTA|BOTAS|CASCO|CHALECO|CHISMOSO|CHISPERO|DELANTAL|ESCOBA|ESPONJA|EXTINTOR|FAJA|FELPA|FIBRA|FILTRO|FRANELA|GAFA|GUANTE|JABONERA|MANGAS|MARCADOR|MASCARA|MASCARILLA|OREJERA|PAPELERA|PONCHO|PROTECTOR|PURIFICADOR|SAFETY|TRAPEADOR|VIDRIO|ZAPATOS|SEGURIDAD|HOGAR|LIMPIEZA/i.test(c)) {
+    return 'Seguridad y Protección';
+  }
+
+  return 'Otros';
+}
+
+window.autoMigrateDatabaseCategories = async function() {
+  if (!confirm('¿Desea normalizar y actualizar automáticamente la categoría de TODOS los productos en Firebase a las 8 categorías principales?')) return;
+  showNotif('Normalizando categorías en la base de datos...');
+  let count = 0;
+  let errors = 0;
+  try {
+    for (const p of catalogData) {
+      const rawCat = p.rawCategory || '';
+      const cleanCat = normalizeCategory(rawCat);
+      // Solo actualizar si la categoría en Firebase es diferente a la normalizada
+      if (rawCat !== cleanCat) {
+        try {
+          await updateDoc(doc(db, 'productos', p.id), { category: cleanCat });
+          count++;
+        } catch (e) {
+          errors++;
+          console.error(`Error en producto ${p.name}:`, e);
+        }
+      }
+    }
+    // También actualizar la lista de categorías en el documento de medidas
+    if (medidasDocId) {
+      await updateDoc(doc(db, 'medidas', medidasDocId), { categories: MAIN_CATEGORIES });
+    }
+    showNotif(`¡Listo! Se actualizaron ${count} productos.${errors > 0 ? ` (${errors} errores)` : ''}`);
+  } catch (err) {
+    console.error(err);
+    showNotif('Error al normalizar la base de datos.');
+  }
+};
+
 // ESTADO
 let catalogData         = [];
 let adminSearchQuery    = '';
@@ -37,7 +117,7 @@ let adminStockFilter    = 'all';
 let adminPriceMin       = '';
 let adminPriceMax       = '';
 let medidasDocId        = null;
-let dynamicCategories   = [];
+let dynamicCategories   = [...MAIN_CATEGORIES];
 let measureSections     = {};
 let productMeasures     = [];
 let editMeasures        = [];
@@ -225,9 +305,8 @@ function iniciarBaseDeDatos() {
       const data = snapshot.docs[0].data();
       medidasDocId    = snapshot.docs[0].id;
       measureSections = data.sections || {};
-      if (data.categories && data.categories.length > 0) {
-        dynamicCategories = data.categories;
-      }
+      // Ya no cargamos las categorías del documento de medidas,
+      // usamos siempre las MAIN_CATEGORIES normalizadas
     }
     setupMeasureControls('p');
     setupMeasureControls('e');
@@ -236,29 +315,16 @@ function iniciarBaseDeDatos() {
 
   unsubProductos = onSnapshot(productosRef, snapshot => {
     catalogData = [];
-    let newCatsFound = false;
 
     snapshot.forEach(d => {
       const data = d.data();
-      catalogData.push({ id: d.id, ...data });
-      if (data.category && !dynamicCategories.includes(data.category)) {
-        dynamicCategories.push(data.category);
-        newCatsFound = true;
-      }
+      const rawCat  = data.category || '';
+      const cleanCat = normalizeCategory(rawCat);
+      catalogData.push({ id: d.id, ...data, category: cleanCat, rawCategory: rawCat });
     });
 
-    // Orden lógico: Alfabéticamente, "Otros" al final
-    dynamicCategories.sort((a, b) => {
-      const aLower = a.toLowerCase();
-      const bLower = b.toLowerCase();
-      if (aLower === 'otros') return 1;
-      if (bLower === 'otros') return -1;
-      return a.localeCompare(b);
-    });
-
-    if (newCatsFound && medidasDocId) {
-      updateDoc(doc(db, 'medidas', medidasDocId), { categories: dynamicCategories });
-    }
+    // Usar siempre las 8 categorías principales
+    dynamicCategories = [...MAIN_CATEGORIES];
 
     refreshCategorySelects();
     renderAdminTable();
